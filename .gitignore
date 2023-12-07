@@ -1,0 +1,17 @@
+src/*
+!src/*/
+!src/*.*
+
+src/*.o
+src/*.exe
+src/a.out
+
+a.out
+.vscode/
+
+build/*
+!build/.gitkeep
+output/*
+!output/.gitkeep
+
+debug.txt
