@@ -38,7 +38,7 @@ const char doc[] = "Varas - Simula uma evacuação de pedestres por meio do mode
 "\tAmbiente carregado de um arquivo:\n"
 "\t\t1 - Apenas a estrutura do ambiente (portas substituídas por paredes).\n"
 "\t\t2 - Estrutura e portas.\n"
-"\t\t3 - Estrutura e pedestres."
+"\t\t3 - Estrutura e pedestres.\n"
 "\t\t4 - Estrutura, portas e pedestres.\n"
 "\tAmbiente criado automaticamente:\n"
 "\t\t5 - Ambiente será criado considerando quantidade de linhas e colunas passadas pelas opções --lin e --col,"
@@ -48,6 +48,7 @@ const char doc[] = "Varas - Simula uma evacuação de pedestres por meio do mode
 "Para o método 5, --lin e --col são obrigatórios.\n"
 "\n"
 "O restante das opções (--simu, --ped, --seed), são sempre opcionais.\n"
+"--alfa tem valor padrão de 0.\n"
 "--input-file tem valor padrão de \"sala_padrao.txt\".\n"
 "--simu e --ped tem valor padrão de 1.\n"
 "--seed tem valor padrão de 0.\n"
@@ -69,7 +70,8 @@ static struct argp_option options[] = {
     {"col", 'c', "COLUNAS", 0, "COLUNAS indica a quantidade de colunas que o ambiente criado deve ter."},
 
     {"\nVariáveis de simulação:\n",0,0,OPTION_DOC,0,7},
-    {"ped", 'p', "PEDESTRES", 0, "Número de pedestres a serem inseridos no ambiente de forma aleatória.",8},
+    {"alfa", 'z', "ALFA", 0, "Coeficiente de evitação de multidões", 8},
+    {"ped", 'p', "PEDESTRES", 0, "Número de pedestres a serem inseridos no ambiente de forma aleatória."},
     {"simu", 's', "SIMULACOES", 0, "Número de simulações a serem realizadas por conjunto de saídas."},
     {"seed", 'e', "SEED", 0, "Semente inicial para geração de números pseudo-aleatórios."},
     {"debug", 'd',0,0, "Indica se mensagens de debug devem ser impressas na saída padrão."},
@@ -132,7 +134,7 @@ int main(int argc, char **argv){
         for(int i = 0; i < numero_simulacoes; i++, seed++)
         {
             srand(seed);
-            if( determinar_piso_geral())
+            if( calcular_pisos_estaticos() || calcular_piso_geral())
                 return 0;
 
             if(commands.debug)
@@ -165,6 +167,9 @@ int main(int argc, char **argv){
                 confirmar_movimentacao();
                 atualizar_grid_pedestres();
                 resetar_estado_pedestres();
+
+                if( calcular_piso_geral())
+                    return 0;
                 
                 if(commands.output_type == 1)
                 {
@@ -286,6 +291,9 @@ error_t parser_function(int key, char *arg, struct argp_state *state)
             break;
         case 'd':
             commands->debug = 1;
+            break;
+        case 'z':
+            commands->alfa = atof(arg); 
             break;
         case ARGP_KEY_ARG:
             fprintf(stderr, "Nenhum argumento não-opcional é esperado.\n");

@@ -16,9 +16,16 @@ enum Status {SAIU, PARADO, MOVENDO};
 
 typedef int ** Grid;
 
+typedef struct celula{
+    int loc_lin, loc_col;
+    double valor;
+}celula;
+
 struct saida {
     int loc_lin, loc_col; // localização da saida na grid
-    double **field; // piso referente à saida especificada
+    double **estatico; // peso estático
+    double **dinamico; // peso dinâmico
+    double **field; // piso final referente à saída
 };
 typedef struct saida * Saida;
 
@@ -50,6 +57,7 @@ typedef struct command_line {
     int output_to_file;
     int input_method;
     int debug;
+    double alfa;
 } Command_line;
 
 extern Grid grid_esqueleto;

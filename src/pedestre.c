@@ -25,11 +25,6 @@ typedef struct lista_ped_conflito{
     int ped[8]; // considerando a vizinhança em uso (moore), 8 é a quantidade máxima de conflitos possível
 }lista_ped_conflito;
 
-typedef struct celula{
-    int loc_lin, loc_col;
-    double valor;
-}celula;
-
 typedef struct lista_vizin_valida{
     int qtd;
     celula vet[8]; // 8 é a quantidade de células na vizinhança desconsiderando a célula do pedestre
