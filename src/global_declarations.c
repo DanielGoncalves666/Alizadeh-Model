@@ -16,7 +16,7 @@ int numero_simulacoes = 1; // uma única simulação por padrão
 int numero_pedestres = 1;
 int original_seed = 0;
 
-Grid grid_esqueleto = NULL; // grid contendo paredes e saidas
+Grid grid_esqueleto = NULL; // grid contendo paredes
 Grid grid_pedestres = NULL; // grid contendo apenas a localização dos pedestres
 Grid grid_mapa_calor = NULL; // armazena a quantidade de vezes que um pedestre esteve em uma dada célula
 Conjunto_saidas saidas = {NULL, NULL, 0};

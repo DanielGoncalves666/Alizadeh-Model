@@ -64,9 +64,9 @@ void imprimir_grid_pedestres(FILE *arquivo_saida)
 	for(int i = 0; i < num_lin_grid; i++){
 		for(int h = 0; h < num_col_grid; h++)
 		{
-			if(saidas.combined_field[i][h] == VALOR_SAIDA)
+			if(saidas.static_combined_field[i][h] == VALOR_SAIDA)
 				fprintf(arquivo_saida,"🚪");
-			else if(saidas.combined_field[i][h] == VALOR_PAREDE)
+			else if(saidas.static_combined_field[i][h] == VALOR_PAREDE)
 				fprintf(arquivo_saida,"🧱"); // imprime parede
 			else if(grid_pedestres[i][h] == 0)
 				fprintf(arquivo_saida,"⬛"); // célula vazia

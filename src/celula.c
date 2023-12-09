@@ -74,9 +74,9 @@ void troca(celula *vet, int a, int b)
  * @param vet vetor de células
  * @param N número de células
  * @param valor valor procurado
- * @param qtd_iguais quantidade de ocorrências do VALOR procurado
+ * @param qtd_iguais quantidade de células iguais à VALOR
  * 
- * @return índice da menor posição com VALOR
+ * @return número de células menores que VALOR, ou -1, caso não exista nenhuma célula menor que VALOR
  * 
 */
 int busca_binaria_celulas(celula *vet, int N, double valor, int *qtd_iguais)
@@ -85,8 +85,14 @@ int busca_binaria_celulas(celula *vet, int N, double valor, int *qtd_iguais)
     int dir = N - 1;
     int meio;
 
-    int menor = -1;
+    int qtd_menor = -1;
     *qtd_iguais = 0;
+
+    if(valor < vet[0].valor)
+        return qtd_menor;
+
+    if(valor > vet[N - 1].valor)
+        return N;
 
     while(esq <= dir)
     {
@@ -97,19 +103,19 @@ int busca_binaria_celulas(celula *vet, int N, double valor, int *qtd_iguais)
             int i = meio;
 
             // verifica se existe VALOR à direita
-            while(vet[i].valor == valor)
+            while(i >= 0 && vet[i].valor == valor)
             {
                 i--;
-                qtd_iguais++;
+                (*qtd_iguais)++;
             }
-            menor = i + 1; // menor índice onde existe VALOR
+            qtd_menor = i + 1; // menor índice onde existe VALOR (equivalente à quantidade de células menores que VALOR)
 
             i = meio + 1;
             // verifica se existe VALOR à esquerda
             while(i < N && vet[i].valor == valor)
             {
                 i++;
-                qtd_iguais++;
+                (*qtd_iguais)++;
             }
 
             break;
@@ -123,5 +129,28 @@ int busca_binaria_celulas(celula *vet, int N, double valor, int *qtd_iguais)
         }
     }
 
-    return menor;
+    // caso não exista célula ocupada com o campo de piso VALOR
+    if(qtd_menor == -1)
+    {
+        // caso VALOR seja maior que a célula na posição dir, decrementamos até encontrar a maior célula que seja menor que VALOR
+        if(vet[dir].valor < valor)
+        {
+            int i = dir;
+            while(i >=0 && vet[i].valor < valor)
+                i--;
+
+            qtd_menor = i + 1; // 'i' é o índice da célula imediatamente menor que VALOR, 'i' + 1 é o número de células menores
+        }
+        else // caso VALOR seja menor que a célula na posição dir, incrementamos até encontrar a maior célula que seja menor que VALOR
+        {
+
+            int i = dir;
+            while(i < N && vet[i].valor > valor)
+                i++;
+
+            qtd_menor = i; // 'i' - 1 é o índice da célula imediatamente menor que VALOR, 'i' é o número de células menores
+        }
+    }
+
+    return qtd_menor;
 }

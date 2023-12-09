@@ -117,8 +117,8 @@ int inserir_pedestres_aleatoriamente(int qtd)
         int lin = rand() % (num_lin_grid - 1) + 1;
         int col = rand() % (num_col_grid - 1) + 1;
 
-        if(grid_pedestres[lin][col] != 0 || saidas.combined_field[lin][col] == VALOR_SAIDA 
-            || saidas.combined_field[lin][col] == VALOR_PAREDE)
+        if(grid_pedestres[lin][col] != 0 || saidas.static_combined_field[lin][col] == VALOR_SAIDA 
+            || saidas.static_combined_field[lin][col] == VALOR_PAREDE)
             continue;
 
         if( adicionar_pedestre_conjunto(lin,col))
@@ -212,7 +212,7 @@ void determinar_movimento()
 */
 celula determinar_menor_celula(int loc_lin, int loc_col)
 {
-    double **piso = saidas.combined_field;
+    double **piso = saidas.dynamic_combined_field;
     lista_vizin_valida *vizinhos = calloc(1, sizeof(lista_vizin_valida));
 
     for(int j = -1; j < 2; j++)
@@ -272,7 +272,7 @@ celula determinar_menor_celula(int loc_lin, int loc_col)
 */
 celula determinar_menor_celula_valida(int loc_lin, int loc_col)
 {
-    double **piso = saidas.combined_field;
+    double **piso = saidas.dynamic_combined_field;
     lista_vizin_valida *vizinhos = calloc(1, sizeof(lista_vizin_valida));
 
     for(int j = -1; j < 2; j++)
@@ -578,7 +578,7 @@ void confirmar_movimentacao()
             atual->loc_lin = atual->mov_lin;
             atual->loc_col = atual->mov_col;
 
-            if(saidas.combined_field[atual->loc_lin][atual->loc_col] == VALOR_SAIDA)
+            if(saidas.dynamic_combined_field[atual->loc_lin][atual->loc_col] == VALOR_SAIDA)
             {
                 atual->estado = SAIU;
                 grid_mapa_calor[atual->loc_lin][atual->loc_col]++;

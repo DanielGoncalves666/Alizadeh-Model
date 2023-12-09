@@ -134,11 +134,12 @@ int main(int argc, char **argv){
         for(int i = 0; i < numero_simulacoes; i++, seed++)
         {
             srand(seed);
-            if( calcular_pisos_estaticos() || calcular_piso_geral())
+            if( calcular_pisos_estaticos())
                 return 0;
 
+            //debug
             if(commands.debug)
-                imprimir_piso(saidas.combined_field);
+                imprimir_piso(saidas.static_combined_field);
 
             if(commands.input_method != 3 && commands.input_method != 4)
             {
@@ -157,8 +158,16 @@ int main(int argc, char **argv){
             int num_passos_tempo = 0;
             while(ambiente_vazio())
             {
+                //debug
                 if(commands.debug)
                     printf("\nPasso %d.\n", num_passos_tempo);
+
+                if(calcular_piso_geral())
+                    return 0;
+
+                //debug
+                if(commands.debug)
+                    imprimir_piso(saidas.dynamic_combined_field);    
 
                 determinar_movimento();
                 panico();
@@ -167,9 +176,6 @@ int main(int argc, char **argv){
                 confirmar_movimentacao();
                 atualizar_grid_pedestres();
                 resetar_estado_pedestres();
-
-                if( calcular_piso_geral())
-                    return 0;
                 
                 if(commands.output_type == 1)
                 {

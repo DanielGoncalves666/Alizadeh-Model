@@ -30,7 +30,8 @@ struct saida {
 typedef struct saida * Saida;
 
 typedef struct conjunto_portas{
-    double **combined_field; // piso resultante da combinação dos pisos de cada uma das saidas
+    double **static_combined_field; // piso resultante da combinação dos pisos estáticos de cada saída
+    double **dynamic_combined_field; // piso resultante da combinação dos pisos dinâmicos de cada saída
     Saida *vet_saidas;// vetor de todas as saidas
     int num_saidas;// número de saidas
 } Conjunto_saidas;

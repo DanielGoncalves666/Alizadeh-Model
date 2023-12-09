@@ -10,6 +10,7 @@
 #include"../headers/global_declarations.h"
 #include"../headers/saida.h"
 #include"../headers/celula.h"
+#include"../headers/impressao.h"
 
 const double regra[3][3] = {{VALOR_DIAGONAL, 1.0, VALOR_DIAGONAL},
                             {     1.0,       0.0,       1.0     },
@@ -21,6 +22,7 @@ Saida criar_saida(int loc_linha, int loc_coluna);
 int determinar_piso_estatico(Saida s);
 int determinar_piso_dinamico(Saida s);
 int determinar_piso_final(Saida s, double alfa);
+int combinar_pisos(double ***piso_combinado, int tipo);
 
 /**
  * Cria uma estrutura Saida correspondente à localização passada (se válida) e a inicializa
@@ -92,8 +94,10 @@ void desalocar_saidas()
     free(saidas.vet_saidas);
     saidas.vet_saidas = NULL;
 
-    desalocar_matriz_double(saidas.combined_field, num_lin_grid);
-    saidas.combined_field = NULL;
+    desalocar_matriz_double(saidas.static_combined_field, num_lin_grid);
+    desalocar_matriz_double(saidas.dynamic_combined_field,num_lin_grid);
+    saidas.static_combined_field = NULL;
+    saidas.dynamic_combined_field = NULL;
 
     saidas.num_saidas = 0;
 }
@@ -211,6 +215,9 @@ int calcular_pisos_estaticos()
             return 1;
     }
 
+    if( combinar_pisos(&(saidas.static_combined_field), 1))
+        return 1;
+
     return 0;
 }
 
@@ -245,18 +252,28 @@ int determinar_piso_dinamico(Saida s)
     }
 
     celula *celulas_ocupadas = malloc(sizeof(celula) * pedestres.num_ped);
+    int index = -1;
     for(int p = 0; p < pedestres.num_ped; p++)
     {
+        if(pedestres.vet[p]->estado == SAIU)
+            continue;
+
         int linha = pedestres.vet[p]->loc_lin;
         int coluna = pedestres.vet[p]->loc_col;
 
-        celulas_ocupadas[p].loc_lin = linha;
-        celulas_ocupadas[p].loc_col = coluna;
-        celulas_ocupadas[p].valor = s->estatico[linha][coluna];
+        index++;
+
+        celulas_ocupadas[index].loc_lin = linha;
+        celulas_ocupadas[index].loc_col = coluna;
+        celulas_ocupadas[index].valor = s->estatico[linha][coluna];
     }
 
-    ordenar_vetor_celulas(celulas_ocupadas,0, pedestres.num_ped - 1);
+    ordenar_vetor_celulas(celulas_ocupadas,0, index);
 
+    // for(int p = 0; p <= index; p++)
+    //     printf("%.2lf ", celulas_ocupadas[p].valor);
+    // printf("\n\n");
+    
     for(int i = 0; i < num_lin_grid; i++)
     {
         for(int h = 0; h < num_col_grid; h++)
@@ -267,13 +284,21 @@ int determinar_piso_dinamico(Saida s)
             double peso_estatico_celula = s->estatico[i][h]; // peso da célula sob análise
 
             int qtd_pedestres_igual = 0; // qtd de pedestres que ocupam células com o mesmo campo de piso
-            int qtd_pedestres_menor = busca_binaria_celulas(celulas_ocupadas, pedestres.num_ped, 
+            int qtd_pedestres_menor = busca_binaria_celulas(celulas_ocupadas, index + 1, 
                                                             peso_estatico_celula, &qtd_pedestres_igual); 
                                                             // qtd de pedestres que ocupam células com campo de piso menor
+
+            if(qtd_pedestres_menor == -1)
+                qtd_pedestres_menor += 1;
+            
+            //printf("v %.1lf m %d i %d\n", peso_estatico_celula, qtd_pedestres_menor, qtd_pedestres_igual);
 
             mat[i][h] = qtd_pedestres_menor + (qtd_pedestres_igual / 2); // dividido pela largura da porta, que por enquanto é sempre 1
         }
     }
+
+    imprimir_piso(mat);
+
 
     free(celulas_ocupadas);
 
@@ -334,23 +359,41 @@ int calcular_piso_geral()
             return 1;
     }
 
-    saidas.combined_field = alocar_matriz_double(num_lin_grid, num_col_grid);
-    if(saidas.combined_field == NULL)
+    if( combinar_pisos(&(saidas.dynamic_combined_field), 2))
+        return 1;
+
+    return 0;
+}
+
+/**
+ * 
+ * @param piso_combinado ponteiro para a matriz onde a combinação deve ocorrer
+ * @param tipo combinação de pisos estáticos (1) ou dinâmicos (2)
+ * 
+ * @return Inteiro, 0 (sucesso) ou 1 (falha).
+*/
+int combinar_pisos(double ***piso_combinado, int tipo)
+{
+
+    *piso_combinado = alocar_matriz_double(num_lin_grid, num_col_grid);
+    if(*piso_combinado == NULL)
     {
         fprintf(stderr,"Falha na alocação da matriz de piso combinado.\n");
         return 1;
     }
 
-    copiar_matriz_double(saidas.combined_field, saidas.vet_saidas[0]->field); // copia o piso da primeira porta
+    double **fonte = tipo == 1? saidas.vet_saidas[0]->estatico : saidas.vet_saidas[0]->field;
+    copiar_matriz_double(*piso_combinado, fonte); // copia o piso da primeira porta
     
     for(int q = 1; q < saidas.num_saidas; q++)
     {
+        fonte =  tipo == 1? saidas.vet_saidas[q]->estatico : saidas.vet_saidas[q]->field;
         for(int i = 0; i < num_lin_grid; i++)
         {
             for(int h = 0; h < num_col_grid; h++)
             {
-                if(saidas.combined_field[i][h] > saidas.vet_saidas[q]->field[i][h])
-                    saidas.combined_field[i][h] = saidas.vet_saidas[q]->field[i][h];
+                if((*piso_combinado)[i][h] > fonte[i][h])
+                    (*piso_combinado)[i][h] = fonte[i][h];
             }
         }
     }
