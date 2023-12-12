@@ -1,8 +1,10 @@
-# Implementação do Modelo de Varas para evacuação de pedestres
+# Implementação do Modelo de Alizadeh para evacuação de pedestres
+
+Esta implementação toma como base a implementação do modelo de Varas, disponível [aqui](https://github.com/DanielGoncalves666/Reimplementacao-Modelo-Varas).
 
 ## Compilar e Executar
 
-Em um terminal execute `./varas.sh`, seguido dos argumentos necessários.
+Em um terminal execute `./alizadeh.sh`, seguido dos argumentos necessários.
 
 ## Arquivos de Entrada e Saída
 
@@ -44,7 +46,7 @@ impendem a movimentação de pedestres através de obstáculos colocados nas dia
 ## Manual de Uso
 
 ```bash
-Usage: varas.exe [OPTION...]
+Usage: alizadeh.exe [OPTION...]
 Varas - Simula uma evacuação de pedestres por meio do modelo de
 (Varas,2007).
 
@@ -85,6 +87,7 @@ Variáveis de simulação:
                              de forma aleatória.
   -s, --simu=SIMULACOES      Número de simulações a serem realizadas por
                              conjunto de saídas.
+  -z, --alfa=ALFA            Coeficiente de evitação de multidões
   
 Outros:
 
@@ -114,17 +117,19 @@ A opção 1 é a padrão.
 carregado ou se o ambiente deve ser gerado.
         Ambiente carregado de um arquivo:
                 1 - Apenas a estrutura do ambiente (portas substituídas por paredes).
-                2 - Apenas a estrutura do ambiente (portas incluídas).
-                3 - Estrutura, portas e pedestres.
+                2 - Estrutura e portas.
+                3 - Estrutura e pedestres.
+                4 - Estrutura, portas e pedestres.
         Ambiente criado automaticamente:
-                4 - Ambiente será criado considerando quantidade de linhas e colunas
-passadas pelas opções --lin e --col,com portas informadas via
---auxiliary-file.
-O método 3 é o padrão.
-Para os métodos 1 e 4, --auxiliary-file é obrigatório.
-Para o método 4, --lin e --col são obrigatórios.
+                5 - Ambiente será criado considerando quantidade de linhas e colunas
+passadas pelas opções --lin e --col,Opções que não carregam portas do
+arquivo de entrada devem recebê-las via --auxiliary-file.
+O método 4 é o padrão.
+Para os métodos 1,3 e 5, --auxiliary-file é obrigatório.
+Para o método 5, --lin e --col são obrigatórios.
 
 O restante das opções (--simu, --ped, --seed), são sempre opcionais.
+--alfa tem valor padrão de 0.
 --input-file tem valor padrão de "sala_padrao.txt".
 --simu e --ped tem valor padrão de 1.
 --seed tem valor padrão de 0.
