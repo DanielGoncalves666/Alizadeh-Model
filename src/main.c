@@ -158,6 +158,9 @@ int main(int argc, char **argv){
             int num_passos_tempo = 0;
             while(ambiente_vazio())
             {
+                if(commands.output_type == 1)
+                    fprintf(arquivo_saida,"Passo %d\n",num_passos_tempo);
+
                 //debug
                 if(commands.debug)
                     printf("\nPasso %d.\n", num_passos_tempo);

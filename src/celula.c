@@ -132,24 +132,15 @@ int busca_binaria_celulas(celula *vet, int N, double valor, int *qtd_iguais)
     // caso não exista célula ocupada com o campo de piso VALOR
     if(qtd_menor == -1)
     {
-        // caso VALOR seja maior que a célula na posição dir, decrementamos até encontrar a maior célula que seja menor que VALOR
-        if(vet[dir].valor < valor)
-        {
-            int i = dir;
-            while(i >=0 && vet[i].valor < valor)
-                i--;
+        // pelo próprio algoritmo quicksort temos que VALOR será maior que vet[esq - 1] e menor que vet[esq + 1].
+        // Às vezes VALOR será menor que vet[esq] e às vezes maior.
 
-            qtd_menor = i + 1; // 'i' é o índice da célula imediatamente menor que VALOR, 'i' + 1 é o número de células menores
-        }
-        else // caso VALOR seja menor que a célula na posição dir, incrementamos até encontrar a maior célula que seja menor que VALOR
-        {
+        // Desta forma, temos garantido que as células entre 0 e esq - 1 (totalizando 'esq') são menores que VALOR
+        qtd_menor = esq;
 
-            int i = dir;
-            while(i < N && vet[i].valor > valor)
-                i++;
-
-            qtd_menor = i; // 'i' - 1 é o índice da célula imediatamente menor que VALOR, 'i' é o número de células menores
-        }
+        //devemos então verificar se vet[esq] é menor que VALOR
+        if(vet[esq].valor < valor)
+            qtd_menor++;
     }
 
     return qtd_menor;
