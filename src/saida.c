@@ -293,7 +293,13 @@ int determinar_piso_dinamico(Saida s)
             
             //printf("v %.1lf m %d i %d\n", peso_estatico_celula, qtd_pedestres_menor, qtd_pedestres_igual);
 
-            mat[i][h] = qtd_pedestres_menor + (qtd_pedestres_igual / 2); // dividido pela largura da porta, que por enquanto é sempre 1
+            mat[i][h] = qtd_pedestres_menor + qtd_pedestres_igual; // dividido pela largura da porta, que por enquanto é sempre 1
+            /*  A equação descrita no artigo é 
+                    mat[i][h] = qtd_pedestres_menor + (qtd_pedestres_igual / 2.0)
+                Porém, seu uso não corresponde com os valores de campo de piso mostrados no próprio artigo. Para que isso ocorra
+                é necessário remover a divisão por 2.
+            */
+
         }
     }
 
