@@ -12,7 +12,7 @@ extern int numero_simulacoes;
 extern int original_seed;
 extern int numero_pedestres;
 
-enum Status {SAIU, PARADO, MOVENDO};
+enum Status {SAINDO, SAIU, PARADO, MOVENDO};
 
 typedef int ** Grid;
 
@@ -59,6 +59,8 @@ typedef struct command_line {
     int input_method;
     int debug;
     double alfa;
+    int na_saida;
+    int sempre_menor;
 } Command_line;
 
 extern Grid grid_esqueleto;

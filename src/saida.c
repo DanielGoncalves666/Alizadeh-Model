@@ -270,9 +270,9 @@ int determinar_piso_dinamico(Saida s)
 
     ordenar_vetor_celulas(celulas_ocupadas,0, index);
 
-    for(int p = 0; p <= index; p++)
-        printf("%.2lf ", celulas_ocupadas[p].valor);
-    printf("\n\n");
+    // for(int p = 0; p <= index; p++)
+    //     printf("%.2lf ", celulas_ocupadas[p].valor);
+    // printf("\n\n");
     
     for(int i = 0; i < num_lin_grid; i++)
     {
@@ -291,7 +291,7 @@ int determinar_piso_dinamico(Saida s)
             if(qtd_pedestres_menor == -1)
                 qtd_pedestres_menor += 1;
             
-            printf("v %.1lf m %d i %d\n", peso_estatico_celula, qtd_pedestres_menor, qtd_pedestres_igual);
+            //printf("v %.1lf m %d i %d\n", peso_estatico_celula, qtd_pedestres_menor, qtd_pedestres_igual);
 
             mat[i][h] = qtd_pedestres_menor + qtd_pedestres_igual; // dividido pela largura da porta, que por enquanto é sempre 1
             /*  A equação descrita no artigo é 
@@ -303,11 +303,7 @@ int determinar_piso_dinamico(Saida s)
         }
     }
 
-    imprimir_piso(mat);
-
-
     free(celulas_ocupadas);
-
 
     return 0;
 }

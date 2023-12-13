@@ -155,7 +155,7 @@ int panico()
     int qtd = 0;
     for(int i = 0; i < pedestres.num_ped; i++)
     {
-        if(pedestres.vet[i]->estado == SAIU)
+        if(pedestres.vet[i]->estado == SAIU || pedestres.vet[i]->estado == SAINDO)
             continue;
 
         if((rand() % 100 + 1) / 100.0 <= PANICO)
@@ -180,10 +180,12 @@ void determinar_movimento()
     {
         Pedestre atual = pedestres.vet[p];
 
-        if(atual->estado == SAIU || atual->estado == PARADO)
+        if(atual->estado != MOVENDO)
             continue;
 
-        celula destino = determinar_menor_celula_valida(atual->loc_lin, atual->loc_col);
+        celula destino = commands.sempre_menor ? determinar_menor_celula(atual->loc_lin, atual->loc_col)
+                                               : determinar_menor_celula_valida(atual->loc_lin, atual->loc_col);
+        // Possível usar ponteiros para funções para melhorar essa linha de código.
 
         if(destino.loc_lin == -1 && destino.loc_col == -1)
         {  // não existem células vizinhas válidas para movimentação 
@@ -375,7 +377,7 @@ int resolver_conflitos_movimento()
     {
         Pedestre atual = pedestres.vet[i];
 
-        if(atual->estado == SAIU || atual->estado == PARADO)
+        if(atual->estado != MOVENDO)
             continue;
 
         int conteudo = mat_conflitos[atual->mov_lin][atual->mov_col]; 
@@ -580,10 +582,13 @@ void confirmar_movimentacao()
 
             if(saidas.dynamic_combined_field[atual->loc_lin][atual->loc_col] == VALOR_SAIDA)
             {
-                atual->estado = SAIU;
+                atual->estado = commands.na_saida ? SAINDO // quando o pedestre deve ficar um passo de tempo antes de ser removido do ambiente
+                                                  : SAIU; // quando o pedestre deve ser removido assim que pisar na saída
                 grid_mapa_calor[atual->loc_lin][atual->loc_col]++;
             }
         }
+        else if(atual->estado == SAINDO)
+            atual->estado = SAIU; // O pedestre ficou um passo de tempo na saída e deve ser removido
     }
 }
 
@@ -630,7 +635,7 @@ void resetar_estado_pedestres()
 {
     for(int p = 0; p < pedestres.num_ped; p++)
     {
-        if(pedestres.vet[p]->estado != SAIU)
+        if(pedestres.vet[p]->estado != SAIU && pedestres.vet[p]->estado != SAINDO)
            pedestres.vet[p]->estado = MOVENDO;
 
     }

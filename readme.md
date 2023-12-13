@@ -47,8 +47,8 @@ impendem a movimentação de pedestres através de obstáculos colocados nas dia
 
 ```bash
 Usage: alizadeh.exe [OPTION...]
-Varas - Simula uma evacuação de pedestres por meio do modelo de
-(Varas,2007).
+Alizadeh - Simula uma evacuação de pedestres por meio do modelo de
+(Alizadeh,2011).
 
   
 Arquivos:
@@ -79,15 +79,24 @@ Dimensões do ambiente:
   
 Variáveis de simulação:
 
-  -d, --debug                Indica se mensagens de debug devem ser impressas
-                             na saída padrão.
+      --alfa=ALFA            Coeficiente de evitação de multidões
   -e, --seed=SEED            Semente inicial para geração de números
                              pseudo-aleatórios.
   -p, --ped=PEDESTRES        Número de pedestres a serem inseridos no ambiente
                              de forma aleatória.
   -s, --simu=SIMULACOES      Número de simulações a serem realizadas por
                              conjunto de saídas.
-  -z, --alfa=ALFA            Coeficiente de evitação de multidões
+  
+Toggle Options:
+
+  -d, --debug                Indica se mensagens de debug devem ser impressas
+                             na saída padrão.
+      --na-saida             Indica que o pedestre deve permanecer por um passo
+                             de tempo quando chega na saída (invés de ser
+                             retirado imediatamente).
+      --sempre-menor         Indica que a movimentação dos pedestres é
+                             sempre para a menor célula, com o pedestre
+                             ficando parado se ela estiver ocupada.
   
 Outros:
 
@@ -128,11 +137,17 @@ O método 4 é o padrão.
 Para os métodos 1,3 e 5, --auxiliary-file é obrigatório.
 Para o método 5, --lin e --col são obrigatórios.
 
-O restante das opções (--simu, --ped, --seed), são sempre opcionais.
+As variáveis de simulação não são obrigatórias.
 --alfa tem valor padrão de 0.
 --input-file tem valor padrão de "sala_padrao.txt".
 --simu e --ped tem valor padrão de 1.
 --seed tem valor padrão de 0.
+
+Toggle Options são opções que podem ser ativadas.
+--na-sala quando não ativado permite que os pedestres sejam removidos da sala
+assim que pisam em uma saída.
+--sempre-menor quando não ativado permite que os pedestres se movimentem para
+a célula menor válida.
 
 Opções desnecessárias para determinados modos são ignoradas.
 ```

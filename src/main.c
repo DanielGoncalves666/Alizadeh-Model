@@ -18,9 +18,9 @@
 #include"../headers/pedestre.h"
 #include"../headers/impressao.h"
 
-const char * argp_program_version = "Varas Original, sem movimentação em X ou através de obstáculos.";
+const char * argp_program_version = "Modelo Alizadeh, sem movimentação em X ou através de obstáculos.";
 
-const char doc[] = "Varas - Simula uma evacuação de pedestres por meio do modelo de (Varas,2007)."
+const char doc[] = "Alizadeh - Simula uma evacuação de pedestres por meio do modelo de (Alizadeh,2011)."
 "\v"
 "O arquivo passado por --auxiliary-file deve conter, em cada uma de suas linhas, as localizações das saídas para um único conjunto de simulações.\n"
 "Um número indeterminado de portas é aceito para um dado conjunto de simulações, com o conteúdo do arquivo devendo seguir o seguinte padrão:\n"
@@ -47,11 +47,14 @@ const char doc[] = "Varas - Simula uma evacuação de pedestres por meio do mode
 "Para os métodos 1,3 e 5, --auxiliary-file é obrigatório.\n"
 "Para o método 5, --lin e --col são obrigatórios.\n"
 "\n"
-"O restante das opções (--simu, --ped, --seed), são sempre opcionais.\n"
+"As variáveis de simulação não são obrigatórias.\n"
 "--alfa tem valor padrão de 0.\n"
 "--input-file tem valor padrão de \"sala_padrao.txt\".\n"
 "--simu e --ped tem valor padrão de 1.\n"
-"--seed tem valor padrão de 0.\n"
+"--seed tem valor padrão de 0.\n\n"
+"Toggle Options são opções que podem ser ativadas.\n"
+"--na-sala quando não ativado permite que os pedestres sejam removidos da sala assim que pisam em uma saída.\n"
+"--sempre-menor quando não ativado permite que os pedestres se movimentem para a célula menor válida.\n"
 "\n"
 "Opções desnecessárias para determinados modos são ignoradas.\n";
 
@@ -70,12 +73,17 @@ static struct argp_option options[] = {
     {"col", 'c', "COLUNAS", 0, "COLUNAS indica a quantidade de colunas que o ambiente criado deve ter."},
 
     {"\nVariáveis de simulação:\n",0,0,OPTION_DOC,0,7},
-    {"alfa", 'z', "ALFA", 0, "Coeficiente de evitação de multidões", 8},
+    {"alfa", 1002, "ALFA", 0, "Coeficiente de evitação de multidões", 8},
     {"ped", 'p', "PEDESTRES", 0, "Número de pedestres a serem inseridos no ambiente de forma aleatória."},
     {"simu", 's', "SIMULACOES", 0, "Número de simulações a serem realizadas por conjunto de saídas."},
     {"seed", 'e', "SEED", 0, "Semente inicial para geração de números pseudo-aleatórios."},
-    {"debug", 'd',0,0, "Indica se mensagens de debug devem ser impressas na saída padrão."},
-    {"\nOutros:\n",0,0,OPTION_DOC,0,9},
+
+    {"\nToggle Options:\n",0,0,OPTION_DOC,0,9},
+    {"debug", 'd',0,0, "Indica se mensagens de debug devem ser impressas na saída padrão.",10},
+    {"na-saida", 1000,0,0, "Indica que o pedestre deve permanecer por um passo de tempo quando chega na saída (invés de ser retirado imediatamente)."},
+    {"sempre-menor", 1001, 0, 0, "Indica que a movimentação dos pedestres é sempre para a menor célula, com o pedestre ficando parado se ela estiver ocupada."},
+
+    {"\nOutros:\n",0,0,OPTION_DOC,0,11},
     {0}
 };
 
@@ -301,7 +309,13 @@ error_t parser_function(int key, char *arg, struct argp_state *state)
         case 'd':
             commands->debug = 1;
             break;
-        case 'z':
+        case 1000:
+            commands->na_saida = 1;
+            break;
+        case 1001:
+            commands->sempre_menor = 1;
+            break;
+        case 1002:
             commands->alfa = atof(arg); 
             break;
         case ARGP_KEY_ARG:
