@@ -55,6 +55,7 @@ const char doc[] = "Alizadeh - Simula uma evacuação de pedestres por meio do m
 "Toggle Options são opções que podem ser ativadas.\n"
 "--na-sala quando não ativado permite que os pedestres sejam removidos da sala assim que pisam em uma saída.\n"
 "--sempre-menor quando não ativado permite que os pedestres se movimentem para a célula menor válida.\n"
+"--evitar-mov-cantos quando não ativado permite movimentação através dos cantos de paredes/obstáculos.\n"
 "\n"
 "Opções desnecessárias para determinados modos são ignoradas.\n";
 
@@ -81,7 +82,8 @@ static struct argp_option options[] = {
     {"\nToggle Options:\n",0,0,OPTION_DOC,0,9},
     {"debug", 'd',0,0, "Indica se mensagens de debug devem ser impressas na saída padrão.",10},
     {"na-saida", 1000,0,0, "Indica que o pedestre deve permanecer por um passo de tempo quando chega na saída (invés de ser retirado imediatamente)."},
-    {"sempre-menor", 1001, 0, 0, "Indica que a movimentação dos pedestres é sempre para a menor célula, com o pedestre ficando parado se ela estiver ocupada."},
+    {"sempre-menor", 1001, 0,0, "Indica que a movimentação dos pedestres é sempre para a menor célula, com o pedestre ficando parado se ela estiver ocupada."},
+    {"evitar-mov-cantos",1003,0,0, "Indica que a movimentação através de cantos de paredes/obstáculos deve ser impedida."},
 
     {"\nOutros:\n",0,0,OPTION_DOC,0,11},
     {0}
@@ -317,6 +319,9 @@ error_t parser_function(int key, char *arg, struct argp_state *state)
             break;
         case 1002:
             commands->alfa = atof(arg); 
+            break;
+        case 1003:
+            commands->evitar_mov_cantos = 1;
             break;
         case ARGP_KEY_ARG:
             fprintf(stderr, "Nenhum argumento não-opcional é esperado.\n");

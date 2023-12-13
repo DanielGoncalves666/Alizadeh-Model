@@ -19,9 +19,19 @@ int original_seed = 0;
 Grid grid_esqueleto = NULL; // grid contendo paredes
 Grid grid_pedestres = NULL; // grid contendo apenas a localização dos pedestres
 Grid grid_mapa_calor = NULL; // armazena a quantidade de vezes que um pedestre esteve em uma dada célula
-Conjunto_saidas saidas = {NULL, NULL, 0};
+Conjunto_saidas saidas = {NULL, NULL, NULL, 0};
 Conjunto_pedestres pedestres = {NULL,0};
-Command_line commands = {"sala_padrao.txt","","",1,0,3,0,0,0,0};
+Command_line commands = {.nome_arquivo_entrada="sala_padrao.txt",
+                         .nome_arquivo_saida="",
+                         .nome_arquivo_auxiliar="",
+                         .output_type=1,
+                         .output_to_file=0,
+                         .input_method=3,
+                         .debug=0,
+                         .alfa=0.0,
+                         .na_saida=0,
+                         .sempre_menor=0,
+                         .evitar_mov_cantos=0};
 
 /**
  * Aloca de forma dinâmica uma matriz de inteiros de dimensão NUM_LIN x NUM_COL
@@ -173,10 +183,13 @@ int copiar_matriz_double(double **dest, double **src)
  */
 int eh_diagonal_valida(int loc_lin, int loc_col, int j, int k, double **mat)
 {
+    int eh_diagonal_parcialmente_invalida = 0; // indica se a diagonal é bloqueada por apenas um obstáculo/parede
+
     if(j == -1 && k == -1)
     {
         if(loc_lin - 1 >= 0 && mat[loc_lin - 1][loc_col] == VALOR_PAREDE)
         {
+            eh_diagonal_parcialmente_invalida = 1;
             if(loc_col - 1 >= 0 && mat[loc_lin][loc_col - 1] == VALOR_PAREDE)
                 return 0;
         }
@@ -185,6 +198,7 @@ int eh_diagonal_valida(int loc_lin, int loc_col, int j, int k, double **mat)
     {
         if(loc_lin - 1 >= 0 && mat[loc_lin - 1][loc_col] == VALOR_PAREDE)
         {
+            eh_diagonal_parcialmente_invalida = 1;
             if(loc_col + 1 < num_col_grid && mat[loc_lin][loc_col + 1] == VALOR_PAREDE)
                 return 0;
         }
@@ -193,6 +207,7 @@ int eh_diagonal_valida(int loc_lin, int loc_col, int j, int k, double **mat)
     {
         if(loc_lin + 1 < num_lin_grid && mat[loc_lin + 1][loc_col] == VALOR_PAREDE)
         {
+            eh_diagonal_parcialmente_invalida = 1;
             if(loc_col - 1 >= 0 && mat[loc_lin][loc_col - 1] == VALOR_PAREDE)
                 return 0;
         }
@@ -201,10 +216,14 @@ int eh_diagonal_valida(int loc_lin, int loc_col, int j, int k, double **mat)
     {
         if(loc_lin + 1 < num_lin_grid && mat[loc_lin + 1][loc_col] == VALOR_PAREDE)
         {
+            eh_diagonal_parcialmente_invalida = 1;
             if(loc_col + 1 < num_col_grid && mat[loc_lin][loc_col + 1] == VALOR_PAREDE)
                 return 0;
         }
     }
+
+    if(commands.evitar_mov_cantos)
+        return ! eh_diagonal_parcialmente_invalida;
 
     return 1;
 }

@@ -61,6 +61,7 @@ typedef struct command_line {
     double alfa;
     int na_saida;
     int sempre_menor;
+    int evitar_mov_cantos;
 } Command_line;
 
 extern Grid grid_esqueleto;
