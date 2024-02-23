@@ -79,19 +79,6 @@ void imprimir_grid_pedestres(FILE *arquivo_saida)
 }
 
 /**
- * ## imprimir_piso
- * 
- * #### Entrada
- * Matriz de Double.
- * 
- * #### Descrição
- * Imprime o conteúdo da matriz
- * 
- * #### Saída
- * 1, em sucesso, 0, em falha
-*/
-
-/**
  * Imprime o conteúdo da matriz de campo de piso.
  * 
  * @param mat Matriz de Doubles.

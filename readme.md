@@ -28,9 +28,22 @@ Os arquivos auxiliares contêm as coordenadas em que saídas devem ser inseridas
 tenha sido escolhido. Cada linha contém um conjunto de saídas que será usado pelo número de simulações determinadas,
 sendo substituído pelo próximo conjunto (se existir) assim que elas acabem. A seguinte sintaxe é usada:
 
+1 - Vírgulas são usadas para separar diferentes saídas.
+
+2 - O símbolo de adição ( + ) é usado para indicar que o próximo par de coordenadas faz parte da mesma saída.
+
+3 - Um ponto final indica o fim da lista de coordenadas para uma dada simulação.
+
+
+Exemplos:
+
 ```text
 linha1 coluna1, linha2 coluna2, ... , linhaN colunaN.
+linha1_1 coluna1_1+ linha1_2 coluna1_2, ...
 ```
+
+Um número indeterminado de portas é aceito para um dado conjunto de simulações.
+Saídas repetidas são aceitas.
 
 Arquivos auxiliares devem ser inseridos no diretório `saidas/`.
 
@@ -109,11 +122,6 @@ for any corresponding short options.
 
 O arquivo passado por --auxiliary-file deve conter, em cada uma de suas linhas,
 as localizações das saídas para um único conjunto de simulações.
-Um número indeterminado de portas é aceito para um dado conjunto de
-simulações, com o conteúdo do arquivo devendo seguir o seguinte padrão:
-LIN_PORTA_1 COL_PORTA_1, LIN_PORTA_2 COL_PORTA_2 ...
-        Depois do último par deve vir um ponto final.
-OBS: Saídas repetidas são aceitas.
 
 --output-type indica quais e como os dados gerados pela simulação devem ser
 enviados para a saída. As seguintes opções são possíveis:

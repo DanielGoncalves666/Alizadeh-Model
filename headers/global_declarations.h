@@ -21,8 +21,17 @@ typedef struct celula{
     double valor;
 }celula;
 
+
+/**
+ * Uma porta dupla ou duas portas lado a lado? Qual a diferença?
+ * O pedestre é capaz de entrar na porta via diagonal? (pensar em ambos os casos)
+ * Como ficam portas nos cantos da sala?
+*/
+
+
 struct saida {
-    int loc_lin, loc_col; // localização da saida na grid
+    int largura; // largura da saída (em células contíguas)
+    celula *loc; // celulas que fazem parte da saída. Valor setado para 1.0
     double **estatico; // peso estático
     double **dinamico; // peso dinâmico
     double **field; // piso final referente à saída

@@ -39,8 +39,15 @@ Saida criar_saida(int loc_linha, int loc_coluna)
     Saida nova = malloc(sizeof(struct saida));
     if(nova != NULL)
     {
-        nova->loc_lin = loc_linha;
-        nova->loc_col = loc_coluna;
+        nova->loc = malloc(sizeof(celula));
+        if(nova->loc == NULL)
+            return NULL;
+
+        celula primeira = {loc_linha, loc_coluna, 1.0};
+
+        nova->loc[0] = primeira;
+
+        nova->largura = 1;
 
         nova->estatico = alocar_matriz_double(num_lin_grid, num_col_grid);
         nova->dinamico = alocar_matriz_double(num_lin_grid, num_col_grid);
@@ -48,6 +55,31 @@ Saida criar_saida(int loc_linha, int loc_coluna)
     }
 
     return nova;
+}
+
+/**
+ * Expande a saída passada pela célula nas coordenadas passadas.
+ * 
+ * @param exp Saida que deve ser expandida
+ * @param loc_linha Linha da célula
+ * @param loc_coluna Coluna da célula
+ * @return Inteiro, 0 (sucesso) ou 1 (fracasso).
+*/
+int expandir_saida(Saida exp, int loc_linha, int loc_coluna)
+{
+    if(loc_linha < 0 || loc_linha >= num_lin_grid || loc_coluna < 0 || loc_coluna >= num_col_grid)
+        return 1;
+
+    exp->largura += 1;
+    exp->loc = realloc(exp->loc, sizeof(celula) * exp->largura);
+    if(exp->loc == NULL)
+        return 1;
+
+    celula nova = {loc_linha, loc_coluna, 1.0};
+
+    exp->loc[exp->largura - 1] = nova;
+
+    return 0;
 }
 
 /**
@@ -86,6 +118,7 @@ void desalocar_saidas()
 {
     for(int s = 0; s < saidas.num_saidas; s++)
     {
+        free(saidas.vet_saidas[s]->loc);
         free(saidas.vet_saidas[s]->estatico);
         free(saidas.vet_saidas[s]->dinamico);
         free(saidas.vet_saidas[s]->field);
@@ -130,7 +163,13 @@ int determinar_piso_estatico(Saida s)
                 mat[i][h] = 0.0;
         }
     }
-    mat[s->loc_lin][s->loc_col] = VALOR_SAIDA; // Adiciona a saida
+
+    for(int i = 0; i < s->largura; i++)
+    {
+        celula saida_celula = s->loc[i];
+
+        mat[saida_celula.loc_lin][saida_celula.loc_col] = VALOR_SAIDA; // adiciona a célula da saída
+    }
 
     double **aux = alocar_matriz_double(num_lin_grid,num_col_grid);
     // matriz para armazenar as alterações para o tempo t + 1 do autômato
@@ -218,6 +257,7 @@ int calcular_pisos_estaticos()
     if( combinar_pisos(&(saidas.static_combined_field), 1))
         return 1;
 
+
     return 0;
 }
 
@@ -245,7 +285,7 @@ int determinar_piso_dinamico(Saida s)
         {
             double conteudo = grid_esqueleto[i][h];
             if(conteudo == VALOR_PAREDE)
-                mat[i][h] = -1;
+                mat[i][h] = -1; // células cujo piso dinâmico não devem ser calculado
             else
                 mat[i][h] = 0.0;
         }
@@ -293,7 +333,7 @@ int determinar_piso_dinamico(Saida s)
             
             //printf("v %.1lf m %d i %d\n", peso_estatico_celula, qtd_pedestres_menor, qtd_pedestres_igual);
 
-            mat[i][h] = qtd_pedestres_menor + qtd_pedestres_igual; // dividido pela largura da porta, que por enquanto é sempre 1
+            mat[i][h] = (qtd_pedestres_menor + qtd_pedestres_igual) / (double) s->largura;
             /*  A equação descrita no artigo é 
                     mat[i][h] = qtd_pedestres_menor + (qtd_pedestres_igual / 2.0)
                 Porém, seu uso não corresponde com os valores de campo de piso mostrados no próprio artigo. Para que isso ocorra

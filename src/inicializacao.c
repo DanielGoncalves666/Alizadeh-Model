@@ -259,16 +259,19 @@ int gerar_ambiente()
 */
 int extrair_saidas(FILE *arquivo_auxiliar)
 {
-    int lin = 0;
-    int col = 0;
+    int lin = 0; // armazena temporariamente a linha da saída lida
+    int col = 0; // armazena temporariamente a coluna da saída lida
 
-    int qtd = 0;
+    int qtd = 0; // quantidade de saídas extraídas
     char caracter = '\0';
 
+    int ehNova = 1; // indica se a lin e col lidas devem ser incluídas como uma nova porta (1)
+                    // ou se devem ser expandidas sobre a última saída (0)
+
+    int retorno = fscanf(arquivo_auxiliar,"%d %d %c ",&lin,&col,&caracter);
+    
     while(1)
     {
-        int retorno = fscanf(arquivo_auxiliar,"%d %d %c ",&lin,&col,&caracter);
-
         if( retorno == EOF)
             return 0; 
 
@@ -278,24 +281,32 @@ int extrair_saidas(FILE *arquivo_auxiliar)
             return 0;
         }
 
-        qtd++;
+        if(ehNova == 1)
+        {
+            qtd++;
+            if( adicionar_saida_conjunto(lin,col))
+                return 0;
+        }
+        else
+        {
+            // expande a última saída adicionada
+            if( expandir_saida(saidas.vet_saidas[saidas.num_saidas - 1],lin,col))
+                return 0;
+        }
 
-        if(caracter == ',')
-        {
-            if( adicionar_saida_conjunto(lin,col))
-                return 0;
-        }
+        if(caracter == '+')
+            ehNova = 0;
+        else if(caracter == ',')
+            ehNova = 1;
         else if(caracter == '.')
-        {
-            if( adicionar_saida_conjunto(lin,col))
-                return 0;
             break;
-        }
         else
         {
             fprintf(stderr, "Falha ao ler o arquivo auxiliar. Símbolo desconhecido.\n");
             return 0;
         }
+
+        retorno = fscanf(arquivo_auxiliar,"%d %d %c ",&lin,&col,&caracter);
     }
 
     return qtd;
