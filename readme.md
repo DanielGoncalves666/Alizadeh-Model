@@ -2,6 +2,16 @@
 
 Esta implementação toma como base a implementação do modelo de Varas, disponível [aqui](https://github.com/DanielGoncalves666/Reimplementacao-Modelo-Varas).
 
+## Terminologia
+
+### Simulação
+
+Entende-se como uma única execução do processo de evacuação, compreendo o momento em que os pedestres estão parados até o momento em que a sala estiver vazia.
+
+### Conjunto de Simulação
+
+Endende-se como um conjunto de simulações de mesmos parâmetros, com excessão do parâmetro **seed**.
+
 ## Compilar e Executar
 
 Em um terminal execute `./alizadeh.sh`, seguido dos argumentos necessários.
@@ -34,7 +44,6 @@ sendo substituído pelo próximo conjunto (se existir) assim que elas acabem. A 
 
 3 - Um ponto final indica o fim da lista de coordenadas para uma dada simulação.
 
-
 Exemplos:
 
 ```text
@@ -43,9 +52,14 @@ linha1_1 coluna1_1+ linha1_2 coluna1_2, ...
 ```
 
 Um número indeterminado de portas é aceito para um dado conjunto de simulações.
-Saídas repetidas são aceitas.
+Saídas repetidas são aceitas (e tratadas como duas saídas distintas).
 
 Arquivos auxiliares devem ser inseridos no diretório `saidas/`.
+
+#### Gerador de Arquivo Auxiliar
+
+No diretório `gerador/` há um programa que, dado um arquivo com coordenadas de saídas em um ambiente, as combina
+duas à duas. Utilize o argumento `--help` para receber ajuda sobre seu funcionamento.
 
 ### Arquivos de Saída
 
@@ -102,14 +116,20 @@ Variáveis de simulação:
   
 Toggle Options:
 
+      --detalhes             Indica se o output deve conter informações sobre
+                             as saídas.
   -d, --debug                Indica se mensagens de debug devem ser impressas
                              na saída padrão.
+      --evitar-mov-cantos    Indica que a movimentação através de cantos de
+                             paredes/obstáculos deve ser impedida.
       --na-saida             Indica que o pedestre deve permanecer por um passo
                              de tempo quando chega na saída (invés de ser
                              retirado imediatamente).
       --sempre-menor         Indica que a movimentação dos pedestres é
                              sempre para a menor célula, com o pedestre
                              ficando parado se ela estiver ocupada.
+      --status               Indica se mensagens de status durante a execução
+                             de simulações devem ser impressas em stdout.
   
 Outros:
 
@@ -151,11 +171,18 @@ As variáveis de simulação não são obrigatórias.
 --simu e --ped tem valor padrão de 1.
 --seed tem valor padrão de 0.
 
-Toggle Options são opções que podem ser ativadas.
+Toggle Options são opções que podem ser ativadas e também não são
+obrigatórias.
 --na-sala quando não ativado permite que os pedestres sejam removidos da sala
 assim que pisam em uma saída.
 --sempre-menor quando não ativado permite que os pedestres se movimentem para
 a célula menor válida.
+--evitar-mov-cantos quando não ativado permite movimentação através dos
+cantos de paredes/obstáculos.
+--debug ativa mensagens de debug.
+--status ativa mensagens que indicam o progessão de simulações.
+--detalhes inclui um cabeçalho contendo as correspondentes saídas de cada
+conjunto de simulação.
 
 Opções desnecessárias para determinados modos são ignoradas.
 ```

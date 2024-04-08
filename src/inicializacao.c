@@ -62,11 +62,8 @@ int abrir_arquivo_auxiliar(struct command_line commands, FILE **arquivo_auxiliar
 int abrir_arquivo_output(struct command_line commands, FILE **arquivo_saida)
 {
     char complete_path[300] = "";
-    
-    time_t timer;
-    time(&timer);
-    struct tm *agora = gmtime(&timer);
-    
+    char dataHora[51];
+
     if(commands.output_to_file)
     {
         // se nenhum nome tiver sido passado
@@ -80,11 +77,14 @@ int abrir_arquivo_output(struct command_line commands, FILE **arquivo_saida)
             else
                 output_type_name = "mapa_calor";
 
-            int horas = agora->tm_hour - 3 < 0 ? 24 + (agora->tm_hour - 3): agora->tm_hour - 3;
+            time_t timer;
+            time(&timer);
+            struct tm *agora = localtime(&timer);
+	
+	        strftime(dataHora,50,"%F_%Z_%T",agora);
 
-            sprintf(complete_path,"%s%s-%s-%02d %02d %d-%02d:%02d:%02d.txt", path_output, output_type_name, 
-                    commands.nome_arquivo_entrada, agora->tm_mday, agora->tm_mon + 1, 
-                    agora->tm_year + 1900, horas, agora->tm_min, agora->tm_sec);
+            sprintf(complete_path,"%s%s-%s-%s.txt", path_output, output_type_name, 
+                    commands.nome_arquivo_entrada,dataHora);
         }
         else
             sprintf(complete_path,"%s%s",path_output,commands.nome_arquivo_saida);
@@ -252,9 +252,53 @@ int gerar_ambiente()
 }
 
 /**
+ * Determina o número de linhas, o que corresponde ao número de conjuntos de simulações, presentes no arquivo auxiliar passado.
+ * 
+ * @param arquivo_auxiliar Arquivo com a localização de saídas para diversos conjuntos de simulações.
+ * @return Número de linhas (número de conjuntos de simuções) presentes no arquivo, ou -1, em falha.
+*/
+int extrair_numero_linhas(FILE *arquivo_auxiliar)
+{
+    if(arquivo_auxiliar == NULL)
+        return -1;
+
+    char caractere = '\n', char_anterior = '\n';
+    int count = 0;
+
+    while(1)
+    {
+        char_anterior = caractere; // para casos onde o arquivo não termina com quebra de linha
+        caractere = fgetc(arquivo_auxiliar);
+        
+        if(caractere == '\n')
+            count++;
+
+        if(caractere == EOF)
+        {
+            if(char_anterior != '\n')
+                count++;
+
+            if(feof(arquivo_auxiliar))
+                break;
+
+            if(ferror(arquivo_auxiliar))
+            {
+                fprintf(stderr, "Erro durante a leitura do arquivo auxiliar.");
+                return -1;
+            }
+        }
+    }
+
+    fseek(arquivo_auxiliar, 0, SEEK_SET);
+
+    return count;
+}
+
+
+/**
  * Lê uma única linha do arquivo passado, extrai as saídas e as adiciona no ambiente. 
  * 
- * @param arquivo_auxiliar Contém as localizações das portas.
+ * @param arquivo_auxiliar Arquivo com a localização de saídas para diversos conjuntos de simulações.
  * @return Inteiro, quantidade de saídas extraídas (sucesso) ou 0 (fracasso).
 */
 int extrair_saidas(FILE *arquivo_auxiliar)
@@ -328,6 +372,7 @@ void finalizar_programa(FILE *arquivo_saida, FILE *arquivo_auxiliar)
 
     desalocar_pedestres();
     desalocar_saidas();
+    desalocar_combined_fields();
 
     desalocar_matriz_int(grid_esqueleto,num_lin_grid);
     desalocar_matriz_int(grid_pedestres,num_lin_grid);

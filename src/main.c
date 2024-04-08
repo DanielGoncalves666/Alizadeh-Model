@@ -48,10 +48,13 @@ const char doc[] = "Alizadeh - Simula uma evacuação de pedestres por meio do m
 "--input-file tem valor padrão de \"sala_padrao.txt\".\n"
 "--simu e --ped tem valor padrão de 1.\n"
 "--seed tem valor padrão de 0.\n\n"
-"Toggle Options são opções que podem ser ativadas.\n"
+"Toggle Options são opções que podem ser ativadas e também não são obrigatórias.\n"
 "--na-sala quando não ativado permite que os pedestres sejam removidos da sala assim que pisam em uma saída.\n"
 "--sempre-menor quando não ativado permite que os pedestres se movimentem para a célula menor válida.\n"
 "--evitar-mov-cantos quando não ativado permite movimentação através dos cantos de paredes/obstáculos.\n"
+"--debug ativa mensagens de debug.\n"
+"--status ativa mensagens que indicam o progessão de simulações.\n"
+"--detalhes inclui um cabeçalho contendo as correspondentes saídas de cada conjunto de simulação.\n"
 "\n"
 "Opções desnecessárias para determinados modos são ignoradas.\n";
 
@@ -77,6 +80,8 @@ static struct argp_option options[] = {
 
     {"\nToggle Options:\n",0,0,OPTION_DOC,0,9},
     {"debug", 'd',0,0, "Indica se mensagens de debug devem ser impressas na saída padrão.",10},
+    {"status", 1004, 0,0, "Indica se mensagens de status durante a execução de simulações devem ser impressas em stdout."},
+    {"detalhes", 1005, 0,0, "Indica se o output deve conter informações sobre as saídas."},
     {"na-saida", 1000,0,0, "Indica que o pedestre deve permanecer por um passo de tempo quando chega na saída (invés de ser retirado imediatamente)."},
     {"sempre-menor", 1001, 0,0, "Indica que a movimentação dos pedestres é sempre para a menor célula, com o pedestre ficando parado se ela estiver ocupada."},
     {"evitar-mov-cantos",1003,0,0, "Indica que a movimentação através de cantos de paredes/obstáculos deve ser impedida."},
@@ -85,13 +90,13 @@ static struct argp_option options[] = {
     {0}
 };
 
-
+void obter_comando_completo(char *comando_completo, int key, char *arg);
 error_t parser_function(int key, char *arg, struct argp_state *state);
 
 static struct argp argp = {options,&parser_function, NULL, doc};
 
-int main(int argc, char **argv){
-
+int main(int argc, char **argv)
+{
     if( argp_parse(&argp, argc, argv,0,0,&commands) != 0)
         return 0;
 
@@ -121,8 +126,20 @@ int main(int argc, char **argv){
             return 0;
     }
 
-    imprimir_informacoes_gerais(commands, arquivo_saida);
+    if( alocar_combined_fields())
+        return 0;
 
+    imprimir_comando(commands, arquivo_saida);
+
+    int num_conjunto_simulacoes = -1;
+    if(commands.status)
+    {
+        num_conjunto_simulacoes = extrair_numero_linhas(arquivo_auxiliar);
+        if(num_conjunto_simulacoes == -1)
+            return 0;
+    }
+
+    int conjunto_index = 0;
     do
     {
         if(commands.input_method == 1 || commands.input_method == 3 || commands.input_method == 5)
@@ -131,17 +148,40 @@ int main(int argc, char **argv){
                 break; // caso ocorra algum erro, ou se todos os conjuntos de saídas já tiverem sido processados.
         }
 
-        // fprintf(arquivo_saida, "Conjunto de saídas: %d %d", saidas.vet_saidas[0]->loc_lin, saidas.vet_saidas[0]->loc_col);
-        // for(int s = 1; s < saidas.num_saidas; s++)
-        //     fprintf(arquivo_saida, ", %d %d", saidas.vet_saidas[s]->loc_lin, saidas.vet_saidas[s]->loc_col);
-        // fprintf(arquivo_saida, ".\n");
+        if(commands.detalhes)
+            imprimir_cabecalho(arquivo_saida);
 
-        int seed = original_seed;
+        int retorno = calcular_pisos_estaticos();
+        if( retorno == 1) return 0;
+        else if(retorno == -1)
+        {
+            if(commands.output_type != 2)
+                fprintf(arquivo_saida, "Pelo menos uma das saídas do conjunto não é acessível.\n");
+            else
+            {
+                // imprime um placeholder quando existe uma saída inválida no conjunto
+                for(int vezes = 0; vezes < numero_simulacoes; vezes++)
+                {
+                    fprintf(arquivo_saida,"-1 ");
+                }
+                fprintf(arquivo_saida, "\n");
+            }
+
+            if(commands.input_method == 1 || commands.input_method == 3 || commands.input_method == 5)
+                desalocar_saidas();
+
+            if(commands.status)
+            {
+                imprimir_status(conjunto_index, num_conjunto_simulacoes);
+                conjunto_index++;
+            }
+
+            continue;
+        }
+
         for(int i = 0; i < numero_simulacoes; i++, seed++)
         {
             srand(seed);
-            if( calcular_pisos_estaticos())
-                return 0;
 
             //debug
             if(commands.debug)
@@ -221,6 +261,12 @@ int main(int argc, char **argv){
         if(commands.input_method == 2 || commands.input_method == 4)
             break;
 
+        if(commands.status)
+        {
+            imprimir_status(conjunto_index, num_conjunto_simulacoes);
+            conjunto_index++;
+        }
+
     }while(1);
 
     finalizar_programa(arquivo_saida, arquivo_auxiliar);
@@ -231,6 +277,8 @@ int main(int argc, char **argv){
 error_t parser_function(int key, char *arg, struct argp_state *state)
 {
     struct command_line *commands = state->input;
+
+    obter_comando_completo(commands->comando_completo, key, arg);
 
     switch(key)
     {
@@ -297,8 +345,8 @@ error_t parser_function(int key, char *arg, struct argp_state *state)
             }
             break;
         case 'e':
-            original_seed = atoi(arg);
-            if(original_seed < 0)
+            seed = atoi(arg);
+            if(seed < 0)
             {
                 fprintf(stderr, "Seed inválida.\n");
                 return EIO;
@@ -319,8 +367,14 @@ error_t parser_function(int key, char *arg, struct argp_state *state)
         case 1003:
             commands->evitar_mov_cantos = 1;
             break;
+        case 1004:
+            commands->status = 1;
+            break;
+        case 1005:
+            commands->detalhes = 1;
+            break;
         case ARGP_KEY_ARG:
-            fprintf(stderr, "Nenhum argumento não-opcional é esperado.\n");
+            fprintf(stderr, "Nenhum argumento não-opcional é esperado, mas %s foi inserido.\n", arg);
             return EINVAL;
             break;
         case ARGP_KEY_END:
@@ -354,4 +408,61 @@ error_t parser_function(int key, char *arg, struct argp_state *state)
     }
 
     return 0;
+}
+
+/**
+ * Realiza o armazenamento das partes do comando entrado via terminal em uma string. 
+ * 
+ * @param comando_completo String onde as partes do comando serão armazenadas.
+ * @param key Inteiro que indica qual opção está sendo recebida.
+ * @param arg String, contendo o argumento da opção recebida, se existir.
+*/
+void obter_comando_completo(char *comando_completo, int key, char *arg)
+{
+    char aux[100];
+
+    switch(key)
+    {
+        case 1000:
+            sprintf(aux, " --na-saida");
+            break;
+        case 1001:
+            sprintf(aux, " --sempre-menor");
+            break;
+        case 1002:
+            sprintf(aux, " --alfa=%s",arg);
+            break;
+        case 1003:
+            sprintf(aux, " --evitar-mov-cantos");
+            break;
+        case 1004:
+            sprintf(aux, " --status");
+            break;
+        case 1005:
+            sprintf(aux, " --detalhes");
+            break;
+        case 'd':
+            sprintf(aux, " --debug");
+            break;
+        case 'o':
+        case 'O':
+        case 'i':
+        case 'm':
+        case 'a':
+        case 'l':
+        case 'c':
+        case 'p':
+        case 's':
+        case 'e':
+            if(arg == NULL)
+                sprintf(aux, " -%c",key);
+            else
+                sprintf(aux, " -%c%s",key, arg);
+
+            break;
+        default:
+            return;
+    }
+
+    strcat(comando_completo, aux);
 }

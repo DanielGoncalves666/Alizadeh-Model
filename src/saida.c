@@ -19,10 +19,11 @@ const double regra[3][3] = {{VALOR_DIAGONAL, 1.0, VALOR_DIAGONAL},
    determinar o valor dos vizinhos. */
 
 Saida criar_saida(int loc_linha, int loc_coluna);
+int eh_saida_valida(Saida s);
 int determinar_piso_estatico(Saida s);
 int determinar_piso_dinamico(Saida s);
 int determinar_piso_final(Saida s, double alfa);
-int combinar_pisos(double ***piso_combinado, int tipo);
+int combinar_pisos(double **piso_combinado, int tipo);
 
 /**
  * Cria uma estrutura Saida correspondente à localização passada (se válida) e a inicializa
@@ -112,34 +113,111 @@ int adicionar_saida_conjunto(int loc_linha, int loc_coluna)
 }
 
 /**
- * Desaloca as estruturas para as saídas individuais, a matriz da saída combinada e zera a quantidade de saídas.
+ * Realiza a alocação das matrizes de piso combinado estático e dinâmico.
+*/
+int alocar_combined_fields()
+{
+    saidas.static_combined_field = alocar_matriz_double(num_lin_grid, num_col_grid);
+    if(saidas.static_combined_field == NULL)
+    {
+        fprintf(stderr,"Falha na alocação da matriz de piso combinado estático.\n");
+        return 1;
+    }
+
+    saidas.dynamic_combined_field = alocar_matriz_double(num_lin_grid, num_col_grid);
+    if(saidas.dynamic_combined_field == NULL)
+    {
+        fprintf(stderr,"Falha na alocação da matriz de piso combinado dinâmico.\n");
+        return 1;
+    }
+
+    return 0;
+}
+
+/**
+ * Desaloca as estruturas para as saídas individuais, as matrizes das saídas combinadas e zera a quantidade de saídas.
 */
 void desalocar_saidas()
 {
     for(int s = 0; s < saidas.num_saidas; s++)
     {
-        free(saidas.vet_saidas[s]->loc);
-        free(saidas.vet_saidas[s]->estatico);
-        free(saidas.vet_saidas[s]->dinamico);
-        free(saidas.vet_saidas[s]->field);
+        Saida atual = saidas.vet_saidas[s];
+
+        free(atual->loc);
+        desalocar_matriz_double(atual->estatico, num_lin_grid);
+        desalocar_matriz_double(atual->dinamico, num_lin_grid);
+        desalocar_matriz_double(atual->field, num_lin_grid);
+        free(atual);
     }
 
     free(saidas.vet_saidas);
     saidas.vet_saidas = NULL;
 
+    saidas.num_saidas = 0;
+}
+
+/**
+ * Realiza a desalocação das matrizes de piso combinado estático e dinâmico.
+*/
+void desalocar_combined_fields()
+{
     desalocar_matriz_double(saidas.static_combined_field, num_lin_grid);
     desalocar_matriz_double(saidas.dynamic_combined_field,num_lin_grid);
     saidas.static_combined_field = NULL;
     saidas.dynamic_combined_field = NULL;
+}
 
-    saidas.num_saidas = 0;
+/**
+ * Verifica se a saída dada é acessível de alguma forma.
+ * 
+ * @param s Saída que será verificada
+ * @return 0, para falso, 1, para verdadeiro.
+*/
+int eh_saida_valida(Saida s)
+{
+    // Uma saída é acessível se houver, pelo menos, uma célula vazia (sem obstáculo) adjascente na vertical ou horizontal.
+
+    // OBS: Se outra saída estiver colocada na frente da que estiver sendo testada, há a possibilidade dela ainda assim ser considerada válida.
+
+    if(s == NULL)
+        return 0;
+
+    double **mat = s->estatico;
+
+    int count = 0;
+    for(int i = 0; i < s->largura; i++)
+    {
+        celula c = s->loc[i];
+
+        for(int j = -1; j < 2; j++)
+        {
+            if(c.loc_lin + j < 0 || c.loc_lin + j >= num_lin_grid)
+                continue;
+
+            for(int k = -1; k < 2; k++)
+            {
+                if(c.loc_col + k < 0 || c.loc_col + k >= num_col_grid)
+                    continue;
+
+                if(mat[c.loc_lin + j][c.loc_col + k] == VALOR_PAREDE || mat[c.loc_lin + j][c.loc_col + k] == VALOR_SAIDA)
+                    continue;
+
+                if(j != 0 && k != 0)
+                    continue; // diagonais
+
+                return 1;
+            }
+        }
+    }
+
+    return 0;
 }
 
 /**
  * Calcula o campo de piso estático referente à saida dada como argumento
  * 
  * @param s Saida cujo piso será calculado.
- * @return Inteiro, 0 (sucesso) ou 1 (fracasso).
+ * @return Inteiro, 0 (sucesso), 1 (fracasso), -1 (saída inacessível).
 */
 int determinar_piso_estatico(Saida s)
 {
@@ -170,6 +248,9 @@ int determinar_piso_estatico(Saida s)
 
         mat[saida_celula.loc_lin][saida_celula.loc_col] = VALOR_SAIDA; // adiciona a célula da saída
     }
+
+    if( ! eh_saida_valida(s))
+        return -1;
 
     double **aux = alocar_matriz_double(num_lin_grid,num_col_grid);
     // matriz para armazenar as alterações para o tempo t + 1 do autômato
@@ -232,6 +313,8 @@ int determinar_piso_estatico(Saida s)
     }
     while(qtd_mudancas != 0);
 
+    desalocar_matriz_double(aux, num_lin_grid);
+
     return 0;
 }
 
@@ -250,11 +333,15 @@ int calcular_pisos_estaticos()
 
     for(int q = 0; q < saidas.num_saidas; q++)
     {
-        if( determinar_piso_estatico(saidas.vet_saidas[q]))
-            return 1;
+        int retorno = determinar_piso_estatico(saidas.vet_saidas[q]);
+        if(retorno != 0 )
+            return retorno;
     }
 
-    if( combinar_pisos(&(saidas.static_combined_field), 1))
+    if( zerar_matriz_doubles(saidas.static_combined_field, num_lin_grid, num_col_grid))
+        return 1;
+
+    if( combinar_pisos(saidas.static_combined_field, 1))
         return 1;
 
 
@@ -401,41 +488,41 @@ int calcular_piso_geral()
             return 1;
     }
 
-    if( combinar_pisos(&(saidas.dynamic_combined_field), 2))
+    if( zerar_matriz_doubles(saidas.dynamic_combined_field, num_lin_grid, num_col_grid))
+        return 1;
+
+    if( combinar_pisos(saidas.dynamic_combined_field, 2))
         return 1;
 
     return 0;
 }
 
 /**
+ * Realiza a combinação dos pisos finais de cada uma das saídas do conjunto.
  * 
  * @param piso_combinado ponteiro para a matriz onde a combinação deve ocorrer
  * @param tipo combinação de pisos estáticos (1) ou dinâmicos (2)
  * 
  * @return Inteiro, 0 (sucesso) ou 1 (falha).
 */
-int combinar_pisos(double ***piso_combinado, int tipo)
+int combinar_pisos(double **piso_combinado, int tipo)
 {
-
-    *piso_combinado = alocar_matriz_double(num_lin_grid, num_col_grid);
-    if(*piso_combinado == NULL)
-    {
-        fprintf(stderr,"Falha na alocação da matriz de piso combinado.\n");
-        return 1;
-    }
+    // ========================= //
+    // Adicionar verificações!!! //
+    // ========================= //
 
     double **fonte = tipo == 1? saidas.vet_saidas[0]->estatico : saidas.vet_saidas[0]->field;
-    copiar_matriz_double(*piso_combinado, fonte); // copia o piso da primeira porta
+    copiar_matriz_double(piso_combinado, fonte); // copia o piso da primeira saida
     
     for(int q = 1; q < saidas.num_saidas; q++)
     {
-        fonte =  tipo == 1? saidas.vet_saidas[q]->estatico : saidas.vet_saidas[q]->field;
+        fonte = tipo == 1? saidas.vet_saidas[q]->estatico : saidas.vet_saidas[q]->field;
         for(int i = 0; i < num_lin_grid; i++)
         {
             for(int h = 0; h < num_col_grid; h++)
             {
-                if((*piso_combinado)[i][h] > fonte[i][h])
-                    (*piso_combinado)[i][h] = fonte[i][h];
+                if(piso_combinado[i][h] > fonte[i][h])
+                    piso_combinado[i][h] = fonte[i][h];
             }
         }
     }

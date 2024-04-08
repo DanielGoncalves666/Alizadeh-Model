@@ -14,14 +14,15 @@ int num_lin_grid = 0;
 int num_col_grid = 0;
 int numero_simulacoes = 1; // uma única simulação por padrão
 int numero_pedestres = 1;
-int original_seed = 0;
+int seed = 0;
 
 Grid grid_esqueleto = NULL; // grid contendo paredes
 Grid grid_pedestres = NULL; // grid contendo apenas a localização dos pedestres
 Grid grid_mapa_calor = NULL; // armazena a quantidade de vezes que um pedestre esteve em uma dada célula
 Conjunto_saidas saidas = {NULL, NULL, NULL, 0};
 Conjunto_pedestres pedestres = {NULL,0};
-Command_line commands = {.nome_arquivo_entrada="sala_padrao.txt",
+Command_line commands = {.comando_completo="",
+                         .nome_arquivo_entrada="sala_padrao.txt",
                          .nome_arquivo_saida="",
                          .nome_arquivo_auxiliar="",
                          .output_type=1,
@@ -31,7 +32,10 @@ Command_line commands = {.nome_arquivo_entrada="sala_padrao.txt",
                          .alfa=0.0,
                          .na_saida=0,
                          .sempre_menor=0,
-                         .evitar_mov_cantos=0};
+                         .evitar_mov_cantos=0,
+                         .status=0,
+                         .detalhes=0,
+                         };
 
 /**
  * Aloca de forma dinâmica uma matriz de inteiros de dimensão NUM_LIN x NUM_COL
@@ -82,6 +86,31 @@ int zerar_matriz_inteiros(int **mat, int num_lin, int num_col)
 
         for(int h = 0; h < num_col; h++)
             mat[i][h] = 0;
+    }
+
+    return 0;
+}
+
+/**
+ * Zera a matriz de doubles indicada.
+ *
+ * @param mat Matriz de doubles
+ * @param num_lin Número de linhas.
+ * @param num_col Número de colunas.
+ * @return Inteiro, 0 (sucesso) ou 1 (fracasso).
+ */
+int zerar_matriz_doubles(double **mat, int num_lin, int num_col)
+{
+    if(mat == NULL)
+        return 1;
+
+    for(int i = 0; i < num_lin; i++)
+    {
+        if(mat[i] == NULL)
+            return 1;
+
+        for(int h = 0; h < num_col; h++)
+            mat[i][h] = 0.0;
     }
 
     return 0;
@@ -172,7 +201,7 @@ int copiar_matriz_double(double **dest, double **src)
 }
 
 /**
- * Verifica se a diagonal indicada por [loc_lin,loc_col] e [j,k] pode ser atravessada (mão há obstáculos dos lados).
+ * Verifica se a diagonal indicada por [loc_lin,loc_col] e [j,k] pode ser atravessada (não há obstáculos dos lados).
  *
  * @param loc_lin Linha da célula base.
  * @param loc_col Coluna da célula base.

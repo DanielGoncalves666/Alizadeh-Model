@@ -1,5 +1,4 @@
 src/*
-!src/*/
 !src/*.*
 
 src/*.o
@@ -7,6 +6,7 @@ src/*.exe
 src/a.out
 
 a.out
+/*.o
 .vscode/
 
 build/*
@@ -14,5 +14,10 @@ build/*
 output/*
 !output/.gitkeep
 
-debug.txt
-piso.txt
+/*.txt
+
+gerador/*
+!gerador/*.c
+!gerador/*/
+!gerador/*/*.*
+

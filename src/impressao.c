@@ -7,33 +7,20 @@
 
 #include<stdio.h>
 #include<string.h>
+#include<time.h>
 #include"../headers/global_declarations.h"
 #include"../headers/impressao.h"
 
 /**
- * Imprime um cabeçalho contendo informações inseridas via linha de commando no arquivo de saída.
+ * Imprime o comando recebido via terminal.
  * 
  * @param commands Estrutrura contendo parte dos dados de entrada.
- * @param arquivo_saida
+ * @param arquivo_saida Arquivo onde os dados devem ser armazenados
 */
-void imprimir_informacoes_gerais(struct command_line commands, FILE *arquivo_saida)
+void imprimir_comando(struct command_line commands, FILE *arquivo_saida)
 {
-	if(strcmp(commands.nome_arquivo_entrada,"") != 0)
-		fprintf(arquivo_saida, "Arquivo de entrada: %s.\n", commands.nome_arquivo_entrada);
-
-	if(strcmp(commands.nome_arquivo_auxiliar, "") != 0) 
-		fprintf(arquivo_saida, "Arquivo auxiliar: %s.\n", commands.nome_arquivo_auxiliar);
-	
-	fprintf(arquivo_saida, "Quantidade de simulações: %d.\n", numero_simulacoes);
-	fprintf(arquivo_saida, "Seed inicial utilizada: %d.\n", original_seed);
-
-	if(commands.input_method == 1 || commands.input_method == 2|| commands.input_method == 5)
-		fprintf(arquivo_saida, "Quantidade de pedestres: %d.\n", numero_pedestres);
-	
-	if(commands.input_method == 5)
-		fprintf(arquivo_saida, "Dimensões do ambiente: %d x %d.\n", num_lin_grid, num_col_grid);
-
-	fprintf(arquivo_saida,"--------------------------------------------------------------\n\n");
+	fprintf(arquivo_saida, "./alizadeh.sh%s", commands.comando_completo);
+	fprintf(arquivo_saida,"\n--------------------------------------------------------------\n\n");
 }
 
 /**
@@ -95,4 +82,50 @@ void imprimir_piso(double **mat)
 		printf("\n\n");
 	}
 	printf("\n");
+}
+
+/**
+ * Imprime um cabeçalho contendo as correspondentes saídas de cada grupo de simulação.
+ * 
+ * @param arquivo_saida O arquivo onde as informações devem ser impressas
+*/
+void imprimir_cabecalho(FILE *arquivo_saida)
+{
+	char separador = ',';
+    char agregador = '+';
+
+	fprintf(arquivo_saida, "Conjunto de saídas:");
+	for(int s = 0; s < saidas.num_saidas; s++)
+	{
+		if(s == saidas.num_saidas - 1)
+			separador = '.';
+		
+		int largura_saida = saidas.vet_saidas[s]->largura;
+		for(int c = 0; c < largura_saida; c++)
+		{ 
+			celula cel = saidas.vet_saidas[s]->loc[c];
+			fprintf(arquivo_saida, " %d %d%c", cel.loc_lin, cel.loc_col, 
+									c == largura_saida - 1 ? separador : agregador);
+		}
+
+	}
+
+	fprintf(arquivo_saida, "\n");
+}
+
+/**
+ * Imprime a mensagem de status da execução do programa.
+ * 
+ * @param conjunto_index Indica qual o conjunto de simulações finalizado.
+ * @param numero_conjuntos Indica o número total de conjuntos de simulações
+*/
+void imprimir_status(int conjunto_index, int numero_conjuntos)
+{
+	char dataHora[51];
+            
+	time_t atual = time(NULL);
+	struct tm * timeinfo = localtime(&atual);
+	
+	strftime(dataHora,50,"%F %Z %T",timeinfo);
+	fprintf(stdout, "Conjunto de simulação %5d/%d finalizado às %s.\n", conjunto_index + 1, numero_conjuntos, dataHora);
 }
