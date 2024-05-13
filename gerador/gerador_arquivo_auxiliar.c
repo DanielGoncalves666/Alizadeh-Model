@@ -27,8 +27,8 @@ error_t parser_function(int key, char *arg, struct argp_state *state);
 static struct argp argp = {options,&parser_function, NULL, doc};
 
 typedef struct command_line {
-    char nome_arquivo_entrada[51];
-    char nome_arquivo_saida[51];
+    char nome_arquivo_entrada[151];
+    char nome_arquivo_saida[151];
     int output_to_file;
 } Command_line;
 

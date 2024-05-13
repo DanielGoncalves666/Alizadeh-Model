@@ -32,7 +32,7 @@ const char *path_output = "output/";
 */
 int abrir_arquivo_auxiliar(struct command_line commands, FILE **arquivo_auxiliar)
 {
-    char complete_path[100] = "";
+    char complete_path[500] = "";
     
     if( commands.input_method == 1 || commands.input_method == 3 || commands.input_method == 5)
     {

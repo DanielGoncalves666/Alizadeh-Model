@@ -179,13 +179,20 @@ int main(int argc, char **argv)
             continue;
         }
 
+        if(commands.output_type == 2 && saidas.num_saidas == 1)
+            fprintf(arquivo_saida,"#1 "); // Serve para indicar casos onde a saída foi combinada com ela mesma no exemplo 1 do artigo do Alizadeh.
+                                          // Esses casos terão os maiores valores e deverão ser tratados de forma específica.
+
         for(int i = 0; i < numero_simulacoes; i++, seed++)
         {
             srand(seed);
 
             //debug
             if(commands.debug)
+            {
+                printf("Piso estático.\n");
                 imprimir_piso(saidas.static_combined_field);
+            }
 
             if(commands.input_method != 3 && commands.input_method != 4)
             {
@@ -209,7 +216,7 @@ int main(int argc, char **argv)
 
                 //debug
                 if(commands.debug)
-                    printf("\nPasso %d.\n", num_passos_tempo);
+                    printf("\nPiso Dinâmico - Passo %d.\n", num_passos_tempo);
 
                 if(calcular_piso_geral())
                     return 0;

@@ -60,10 +60,10 @@ typedef struct conjunto_pedestres {
 } Conjunto_pedestres;
 
 typedef struct command_line {
-    char comando_completo[300];
-    char nome_arquivo_entrada[51];
-    char nome_arquivo_saida[51];
-    char nome_arquivo_auxiliar[51];
+    char comando_completo[500];
+    char nome_arquivo_entrada[150];
+    char nome_arquivo_saida[150];
+    char nome_arquivo_auxiliar[150];
     int output_type;
     int output_to_file;
     int input_method;

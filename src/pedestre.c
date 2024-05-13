@@ -164,7 +164,7 @@ int panico()
             qtd++;
 
             if(commands.debug)
-                printf("Pedestre %d em panico.\n", pedestres.vet[i]->id);
+                printf("%d em panico.\n", pedestres.vet[i]->id);
         }
     }
 
@@ -192,7 +192,7 @@ void determinar_movimento()
             atual->estado = PARADO;
         
             if(commands.debug)
-                printf("Ped %d, encurralado.\n", atual->id);
+                printf("%d encurralado.\n", atual->id);
         }
         else
         {
