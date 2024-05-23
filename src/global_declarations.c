@@ -33,6 +33,7 @@ Command_line commands = {.comando_completo="",
                          .na_saida=0,
                          .sempre_menor=0,
                          .evitar_mov_cantos=0,
+                         .permitir_mov_x = 0,
                          .status=0,
                          .detalhes=0,
                          };

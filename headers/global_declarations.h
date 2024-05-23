@@ -5,6 +5,7 @@
 #define VALOR_PAREDE 1000
 #define VALOR_DIAGONAL 1.5
 #define PANICO 0.05
+#define TOLERANCIA 1e-8
 
 extern int num_lin_grid;
 extern int num_col_grid;
@@ -72,6 +73,7 @@ typedef struct command_line {
     int na_saida;
     int sempre_menor;
     int evitar_mov_cantos;
+    int permitir_mov_x;
     int status;
     int detalhes;
 } Command_line;

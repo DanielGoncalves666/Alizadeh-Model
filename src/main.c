@@ -11,6 +11,7 @@
 #include<string.h>
 #include<argp.h>
 #include<unistd.h>
+#include<math.h>
 
 #include"../headers/global_declarations.h"
 #include"../headers/inicializacao.h"
@@ -20,7 +21,7 @@
 
 const char * argp_program_version = "Modelo Alizadeh, sem movimentação em X ou através de obstáculos.";
 
-const char doc[] = "Alizadeh - Simula uma evacuação de pedestres por meio do modelo de (Alizadeh,2011)."
+const char doc[] = "Alizadeh - Simula uma evacuação de pedestres por meio do modelo de (Alizadeh,2011), com pequenas alterações."
 "\v"
 "O arquivo passado por --auxiliary-file deve conter, em cada uma de suas linhas, as localizações das saídas para um único conjunto de simulações.\n"
 "\n"
@@ -28,7 +29,10 @@ const char doc[] = "Alizadeh - Simula uma evacuação de pedestres por meio do m
 "\t 1 - Impressão visual do ambiente.\n"
 "\t 2 - Quantidade de passos de tempo até o fim das simulações.\n"
 "\t 3 - Impressão de mapas de calor das células do ambiente.\n"
+"\t 4 - Variação da distribuição de pedestres para duas saídas, no início da simulação.\n"
 "A opção 1 é a padrão.\n"
+"A opção 4 gera números entre 0 e 1, onde valores próximos à zero indicam uam distribuição uniforme entre as duas saídas."
+"Já valores próximos a 1 indicam uma distribuição de pedestres desigual.\n"
 "\n"
 "--input-method indica como o ambiente informado em --input-file deve ser carregado ou se o ambiente deve ser gerado.\n"
 "\tAmbiente carregado de um arquivo:\n"
@@ -37,7 +41,7 @@ const char doc[] = "Alizadeh - Simula uma evacuação de pedestres por meio do m
 "\t\t3 - Estrutura e pedestres.\n"
 "\t\t4 - Estrutura, portas e pedestres.\n"
 "\tAmbiente criado automaticamente:\n"
-"\t\t5 - Ambiente será criado considerando quantidade de linhas e colunas passadas pelas opções --lin e --col,"
+"\t\t5 - Ambiente será criado considerando quantidade de linhas e colunas passadas pelas opções --lin e --col.\n"
 "Opções que não carregam portas do arquivo de entrada devem recebê-las via --auxiliary-file.\n"
 "O método 4 é o padrão.\n"
 "Para os métodos 1,3 e 5, --auxiliary-file é obrigatório.\n"
@@ -49,14 +53,15 @@ const char doc[] = "Alizadeh - Simula uma evacuação de pedestres por meio do m
 "--simu e --ped tem valor padrão de 1.\n"
 "--seed tem valor padrão de 0.\n\n"
 "Toggle Options são opções que podem ser ativadas e também não são obrigatórias.\n"
-"--na-sala quando não ativado permite que os pedestres sejam removidos da sala assim que pisam em uma saída.\n"
-"--sempre-menor quando não ativado permite que os pedestres se movimentem para a célula menor válida.\n"
-"--evitar-mov-cantos quando não ativado permite movimentação através dos cantos de paredes/obstáculos.\n"
+"--na-sala quando ativado obriga os pedestres a ficarem um passo de tempo na saída do ambiente antes de serem removidos.\n"
+"--sempre-menor quando ativado obriga os pedestres a só se moverem para a menor célula de sua vizinhança. Se esta estiver ocupada, o pedestre irá esperar ela ser desocupada.\n"
+"--evitar-mov-cantos quando ativado impede que pedestres se movimentem através dos cantos de paredes/obstáculos. Um único movimento se torna necessariamente em 3 movimentos.\n"
+"--permitir-mov-x quando ativado permite que os pedestres ignorem a restrição que impede movimentações em X.\n"
 "--debug ativa mensagens de debug.\n"
 "--status ativa mensagens que indicam o progessão de simulações.\n"
 "--detalhes inclui um cabeçalho contendo as correspondentes saídas de cada conjunto de simulação.\n"
 "\n"
-"Opções desnecessárias para determinados modos são ignoradas.\n";
+"Opções desnecessárias para determinados --input-method são ignoradas.\n";
 
 static struct argp_option options[] = {
     {"\nArquivos:\n",0,0,OPTION_DOC,0,1},
@@ -85,12 +90,14 @@ static struct argp_option options[] = {
     {"na-saida", 1000,0,0, "Indica que o pedestre deve permanecer por um passo de tempo quando chega na saída (invés de ser retirado imediatamente)."},
     {"sempre-menor", 1001, 0,0, "Indica que a movimentação dos pedestres é sempre para a menor célula, com o pedestre ficando parado se ela estiver ocupada."},
     {"evitar-mov-cantos",1003,0,0, "Indica que a movimentação através de cantos de paredes/obstáculos deve ser impedida."},
+    {"permitir-mov-x",1006,0,0, "Permite que os pedestres se movimentem em X."},
 
     {"\nOutros:\n",0,0,OPTION_DOC,0,11},
     {0}
 };
 
 void obter_comando_completo(char *comando_completo, int key, char *arg);
+double determinar_delta();
 error_t parser_function(int key, char *arg, struct argp_state *state);
 
 static struct argp argp = {options,&parser_function, NULL, doc};
@@ -132,7 +139,7 @@ int main(int argc, char **argv)
     imprimir_comando(commands, arquivo_saida);
 
     int num_conjunto_simulacoes = -1;
-    if(commands.status)
+    if(commands.status && arquivo_auxiliar)
     {
         num_conjunto_simulacoes = extrair_numero_linhas(arquivo_auxiliar);
         if(num_conjunto_simulacoes == -1)
@@ -155,7 +162,7 @@ int main(int argc, char **argv)
         if( retorno == 1) return 0;
         else if(retorno == -1)
         {
-            if(commands.output_type != 2)
+            if(commands.output_type != 2 && commands.output_type != 4)
                 fprintf(arquivo_saida, "Pelo menos uma das saídas do conjunto não é acessível.\n");
             else
             {
@@ -179,7 +186,7 @@ int main(int argc, char **argv)
             continue;
         }
 
-        if(commands.output_type == 2 && saidas.num_saidas == 1)
+        if((commands.output_type == 2 || commands.output_type == 4) && saidas.num_saidas == 1)
             fprintf(arquivo_saida,"#1 "); // Serve para indicar casos onde a saída foi combinada com ela mesma no exemplo 1 do artigo do Alizadeh.
                                           // Esses casos terão os maiores valores e deverão ser tratados de forma específica.
 
@@ -225,9 +232,15 @@ int main(int argc, char **argv)
                 if(commands.debug)
                     imprimir_piso(saidas.dynamic_combined_field);    
 
+                if(commands.output_type == 4)
+                    break; // é necessário apenas o cálculo dos campos de piso estático e dinâmico do primeiro passo de tempo
+
                 determinar_movimento();
                 panico();
-                varredura_movimento_em_x();
+
+                if(!commands.permitir_mov_x)
+                    varredura_movimento_em_x();
+
                 resolver_conflitos_movimento();
                 confirmar_movimentacao();
                 atualizar_grid_pedestres();
@@ -251,14 +264,23 @@ int main(int argc, char **argv)
             else
                 desalocar_pedestres();
 
-            if(commands.output_type == 2) // passos e tempo
+            if(commands.output_type == 2) // passos de tempo
                 fprintf(arquivo_saida,"%d ", num_passos_tempo);
+
+            if(commands.output_type == 4)
+            {
+                double delta = 1;
+                if(saidas.num_saidas == 2) // caso o número de saídas não seja 2, sempre imprime 1
+                    delta = determinar_delta();
+
+                fprintf(arquivo_saida,"%.3lf ", delta);
+            }
         }
 
         if(commands.input_method == 1 || commands.input_method == 3 || commands.input_method == 5)
             desalocar_saidas();
 
-        if(commands.output_type == 2)
+        if(commands.output_type == 2 || commands.output_type == 4)
             fprintf(arquivo_saida, "\n");
 
         if(commands.output_type == 3) // mapa de calor
@@ -281,6 +303,37 @@ int main(int argc, char **argv)
     return 0;
 }
 
+/**
+ * Determina o valor de delta (estático ou do primeiro passo de tempo). 
+ * 
+ * @note O delta é um valor entre 0 e 1 (inclusos) que aponta a distribuição dos pedestres entre as duas saídas existentes. Valores próximos a zero apontam 
+ * um equilíbrio na distribuição entre as duas saídas, enquanto que valores próximos a 1 indicam uma preferência maior dos pedestres em relação a uma única saída.
+ * 
+ * @return double, indicando o delta obtido.
+*/
+double determinar_delta()
+{
+    double **saidaA = commands.alfa == 0 ? saidas.vet_saidas[0]->estatico : saidas.vet_saidas[0]->field;
+    double **saidaB = commands.alfa == 0 ? saidas.vet_saidas[1]->estatico : saidas.vet_saidas[1]->field;
+
+    int Na = 0; // número de células onde o campo de piso da saídaB é menor ou igual ao da saídaA
+    for(int i = 0; i < num_lin_grid; i++)
+    {
+        for(int h = 0; h < num_col_grid; h++)
+        {
+            if(saidaA[i][h] == VALOR_PAREDE || saidaA[i][h] == VALOR_SAIDA || saidaB[i][h] == VALOR_SAIDA)
+                continue;
+
+            if(grid_pedestres[i][h] != 0 && saidaB[i][h] <= saidaA[i][h] + TOLERANCIA)
+                Na++;
+        }
+    }
+
+    double delta = 1.0 - (fmin(Na, pedestres.num_ped - Na) / fmax(Na, pedestres.num_ped - Na));
+
+    return delta;
+}
+
 error_t parser_function(int key, char *arg, struct argp_state *state)
 {
     struct command_line *commands = state->input;
@@ -297,7 +350,7 @@ error_t parser_function(int key, char *arg, struct argp_state *state)
             break;
         case 'O':
             commands->output_type = atoi(arg);
-            if(commands->output_type <= 0 || commands->output_type > 3)
+            if(commands->output_type <= 0 || commands->output_type > 4)
             {
                 fprintf(stderr, "Nenhuma forma de saída corresponde ao output-type passado.\n");
                 return EIO;
@@ -380,6 +433,9 @@ error_t parser_function(int key, char *arg, struct argp_state *state)
         case 1005:
             commands->detalhes = 1;
             break;
+        case 1006:
+            commands->permitir_mov_x = 1;
+            break;
         case ARGP_KEY_ARG:
             fprintf(stderr, "Nenhum argumento não-opcional é esperado, mas %s foi inserido.\n", arg);
             return EINVAL;
@@ -407,6 +463,9 @@ error_t parser_function(int key, char *arg, struct argp_state *state)
                     return EIO;
                 }
             }
+
+            if(commands->output_type == 4)
+                numero_simulacoes = 1;
 
             break;
         default:
@@ -447,6 +506,9 @@ void obter_comando_completo(char *comando_completo, int key, char *arg)
             break;
         case 1005:
             sprintf(aux, " --detalhes");
+            break;
+        case 1006:
+            sprintf(aux, " --permitir-mov-x");
             break;
         case 'd':
             sprintf(aux, " --debug");

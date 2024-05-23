@@ -74,9 +74,11 @@ int abrir_arquivo_output(struct command_line commands, FILE **arquivo_saida)
                 output_type_name = "visual";
             else if(commands.output_type == 2)
                 output_type_name = "tempo_discreto";
-            else
+            else if(commands.output_type == 3)
                 output_type_name = "mapa_calor";
-
+            else
+                output_type_name = "variacao_destribuicao";
+            
             time_t timer;
             time(&timer);
             struct tm *agora = localtime(&timer);
@@ -312,10 +314,13 @@ int extrair_saidas(FILE *arquivo_auxiliar)
     int ehNova = 1; // indica se a lin e col lidas devem ser incluídas como uma nova porta (1)
                     // ou se devem ser expandidas sobre a última saída (0)
 
-    int retorno = fscanf(arquivo_auxiliar,"%d %d %c ",&lin,&col,&caracter);
+    int retorno = 0;
+    
     
     while(1)
     {
+        retorno = fscanf(arquivo_auxiliar,"%d %d %c ",&lin,&col,&caracter);
+
         if( retorno == EOF)
             return 0; 
 
@@ -349,8 +354,6 @@ int extrair_saidas(FILE *arquivo_auxiliar)
             fprintf(stderr, "Falha ao ler o arquivo auxiliar. Símbolo desconhecido.\n");
             return 0;
         }
-
-        retorno = fscanf(arquivo_auxiliar,"%d %d %c ",&lin,&col,&caracter);
     }
 
     return qtd;

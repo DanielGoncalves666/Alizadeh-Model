@@ -1,6 +1,6 @@
 # Implementação do Modelo de Alizadeh para evacuação de pedestres
 
-Esta implementação toma como base a implementação do modelo de Varas, disponível [aqui](https://github.com/DanielGoncalves666/Reimplementacao-Modelo-Varas).
+Esta implementação toma como base a implementação do modelo de Varas, disponível [aqui](https://github.com/DanielGoncalves666/Reimplementacao-Modelo-Varas) e adiciona alguns mecanismos que impactam na movimentação dos pedestres.
 
 ## Terminologia
 
@@ -58,8 +58,8 @@ Arquivos auxiliares devem ser inseridos no diretório `saidas/`.
 
 #### Gerador de Arquivo Auxiliar
 
-No diretório `gerador/` há um programa que, dado um arquivo com coordenadas de saídas em um ambiente, as combina
-duas à duas. Utilize o argumento `--help` para receber ajuda sobre seu funcionamento.
+No diretório `gerador/` há um programa que, dado um arquivo com coordenadas de saídas em um ambiente, realiza combinações entre elas.
+Utilize o argumento `--help` para receber ajuda sobre seu funcionamento.
 
 ### Arquivos de Saída
 
@@ -75,7 +75,7 @@ impendem a movimentação de pedestres através de obstáculos colocados nas dia
 ```bash
 Usage: alizadeh.exe [OPTION...]
 Alizadeh - Simula uma evacuação de pedestres por meio do modelo de
-(Alizadeh,2011).
+(Alizadeh,2011), com pequenas alterações.
 
   
 Arquivos:
@@ -125,6 +125,7 @@ Toggle Options:
       --na-saida             Indica que o pedestre deve permanecer por um passo
                              de tempo quando chega na saída (invés de ser
                              retirado imediatamente).
+      --permitir-mov-x       Permite que os pedestres se movimentem em X.
       --sempre-menor         Indica que a movimentação dos pedestres é
                              sempre para a menor célula, com o pedestre
                              ficando parado se ela estiver ocupada.
@@ -148,7 +149,12 @@ enviados para a saída. As seguintes opções são possíveis:
          1 - Impressão visual do ambiente.
          2 - Quantidade de passos de tempo até o fim das simulações.
          3 - Impressão de mapas de calor das células do ambiente.
+         4 - Variação da distribuição de pedestres para duas saídas, no início
+da simulação.
 A opção 1 é a padrão.
+A opção 4 gera números entre 0 e 1, onde valores próximos à zero indicam
+uam distribuição uniforme entre as duas saídas.Já valores próximos a 1
+indicam uma distribuição de pedestres desigual.
 
 --input-method indica como o ambiente informado em --input-file deve ser
 carregado ou se o ambiente deve ser gerado.
@@ -159,8 +165,9 @@ carregado ou se o ambiente deve ser gerado.
                 4 - Estrutura, portas e pedestres.
         Ambiente criado automaticamente:
                 5 - Ambiente será criado considerando quantidade de linhas e colunas
-passadas pelas opções --lin e --col,Opções que não carregam portas do
-arquivo de entrada devem recebê-las via --auxiliary-file.
+passadas pelas opções --lin e --col.
+Opções que não carregam portas do arquivo de entrada devem recebê-las via
+--auxiliary-file.
 O método 4 é o padrão.
 Para os métodos 1,3 e 5, --auxiliary-file é obrigatório.
 Para o método 5, --lin e --col são obrigatórios.
@@ -173,16 +180,24 @@ As variáveis de simulação não são obrigatórias.
 
 Toggle Options são opções que podem ser ativadas e também não são
 obrigatórias.
---na-sala quando não ativado permite que os pedestres sejam removidos da sala
-assim que pisam em uma saída.
---sempre-menor quando não ativado permite que os pedestres se movimentem para
-a célula menor válida.
---evitar-mov-cantos quando não ativado permite movimentação através dos
-cantos de paredes/obstáculos.
+--na-sala quando ativado obriga os pedestres a ficarem um passo de tempo na
+saída do ambiente antes de serem removidos.
+--sempre-menor quando ativado obriga os pedestres a só se moverem para a menor
+célula de sua vizinhança. Se esta estiver ocupada, o pedestre irá esperar
+ela ser desocupada.
+--evitar-mov-cantos quando ativado impede que pedestres se movimentem através
+dos cantos de paredes/obstáculos. Um único movimento se torna necessariamente
+em 3 movimentos.
+--permitir-mov-x quando ativado permite que os pedestres ignorem a restrição
+que impede movimentações em X.
 --debug ativa mensagens de debug.
 --status ativa mensagens que indicam o progessão de simulações.
 --detalhes inclui um cabeçalho contendo as correspondentes saídas de cada
 conjunto de simulação.
 
-Opções desnecessárias para determinados modos são ignoradas.
+Opções desnecessárias para determinados --input-method são ignoradas.
 ```
+
+## Geração de Gráficos
+
+Na pasta graphics há um programa para geração dos gráficos presentes no artigo de Alizadeh. O execute com a opção `--help` para receber ajuda sobre seu funcionamento.
