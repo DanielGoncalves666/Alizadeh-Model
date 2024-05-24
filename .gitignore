@@ -21,7 +21,4 @@ gerador/*
 !gerador/*/
 !gerador/*/*.*
 
-graphics/in/*
-graphics/out/*
-
 *.cast

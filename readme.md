@@ -197,7 +197,3 @@ conjunto de simulação.
 
 Opções desnecessárias para determinados --input-method são ignoradas.
 ```
-
-## Geração de Gráficos
-
-Na pasta graphics há um programa para geração dos gráficos presentes no artigo de Alizadeh. O execute com a opção `--help` para receber ajuda sobre seu funcionamento.
