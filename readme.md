@@ -1,138 +1,139 @@
-# Implementação do Modelo de Alizadeh para evacuação de pedestres
+# Implementation of the Alizadeh model for Pedestrian Evacuation
 
-Esta implementação toma como base a implementação do modelo de Varas, disponível [aqui](https://github.com/DanielGoncalves666/Reimplementacao-Modelo-Varas) e adiciona alguns mecanismos que impactam na movimentação dos pedestres.
+This repository contains an implementation of the Alizadeh model for pedestrian evacuation using cellular automata. It is based on the implementation of the Varas model for pedestrian evacuation, available [here](https://github.com/DanielGoncalves666/Varas-Model.git).
 
-## Terminologia
+As described in the Varas model documentation, there is a notable difference between the models by both authors and this implementation: pedestrians aren't allowed to perform X movements. In the pedestrian evacuation process, X movements occur when two pedestrians try to move in a way that would cause them to collide in real life situations. To enhance realism, only one of the pedestrians is randomly allowed to move on these situations.
 
-### Simulação
+The described addition can be deactivated using the `--allow-x-movement` flag.
 
-Entende-se como uma única execução do processo de evacuação, compreendo o momento em que os pedestres estão parados até o momento em que a sala estiver vazia.
+## Terminology
 
-### Conjunto de Simulação
+### Simulation
 
-Endende-se como um conjunto de simulações de mesmos parâmetros, com excessão do parâmetro **seed**.
+The term **simulation** stands for a single execution of the evacuation process, which begins when pedestrians are placed in the environment and ends when the environment is empty.
 
-## Compilar e Executar
+### Simulation Set
 
-Em um terminal execute `./alizadeh.sh`, seguido dos argumentos necessários.
+The term **simulation set** refers to a group of simulations with the same parameters, except for the **seed** parameter, which changes from one simulation to the next.
 
-## Arquivos de Entrada e Saída
+## How to compile and run
 
-### Arquivos de Ambiente
-
-Os arquivos de ambiente contém, em sua primeira linha, as dimensões do ambiente (linhas e colunas, respectivamente). Em seguida o ambiente é desenhado, devendo ser das dimensões especificadas na primeira linha.
-Os seguintes símbolos são usados:
-
-|Símbolo   | Significado          |
-|    ---   |        ---           |
-| \#       | Paredes e obstáculos |
-| p ou P   | Pedestres            |
-| _        | Saídas               |
-| .        | Vazio                |
-
-Arquivos de ambiente devem ser inseridos no diretório `ambientes/`.
-
-### Arquivos Auxiliares
-
-Os arquivos auxiliares contêm as coordenadas em que saídas devem ser inseridas no ambiente, desde que o modo correto
-tenha sido escolhido. Cada linha contém um conjunto de saídas que será usado pelo número de simulações determinadas,
-sendo substituído pelo próximo conjunto (se existir) assim que elas acabem. A seguinte sintaxe é usada:
-
-1 - Vírgulas são usadas para separar diferentes saídas.
-
-2 - O símbolo de adição ( + ) é usado para indicar que o próximo par de coordenadas faz parte da mesma saída.
-
-3 - Um ponto final indica o fim da lista de coordenadas para uma dada simulação.
-
-Exemplos:
-
-```text
-linha1 coluna1, linha2 coluna2, ... , linhaN colunaN.
-linha1_1 coluna1_1+ linha1_2 coluna1_2, ...
-```
-
-Um número indeterminado de portas é aceito para um dado conjunto de simulações.
-Saídas repetidas são aceitas (e tratadas como duas saídas distintas).
-
-Arquivos auxiliares devem ser inseridos no diretório `saidas/`.
-
-#### Gerador de Arquivo Auxiliar
-
-No diretório `gerador/` há um programa que, dado um arquivo com coordenadas de saídas em um ambiente, realiza combinações entre elas.
-Utilize o argumento `--help` para receber ajuda sobre seu funcionamento.
-
-### Arquivos de Saída
-
-Os arquivos de saída contém os resultados das simulações e são salvos no diretório `output/`.
-
-## Observações
-
-Esta implementação do modelo adiciona mecanismos que impedem movimentação cruzada entre dois pedestres e que
-impendem a movimentação de pedestres através de obstáculos colocados nas diagonais.
-
-## Manual de Uso
+To compile and run the program, execute the following command in your shell, replacing `[arguments]` with the desired command-line arguments:
 
 ```bash
+./alizadeh.sh [arguments]
+```
+
+## Input and Output Files
+
+### Environment Files
+
+The environment files must be placed in the `environment/` directory. Each file must contain, in its first line, the dimensions of the environment (number of lines and columns, respectively). The subsequent lines must represent the actual environment, drawn with the following symbols:
+
+|Symbol    | Meaning              |
+|    ---   |        ---           |
+| \#       | Walls and obstacles  |
+| p or P   | Pedestrians          |
+| _        | Exits                |
+| .        | Nothing              |
+
+### Auxiliary Files
+
+The auxiliary files must be placed in the `auxiliary/` directory. An auxiliary file contains, in each of its lines, the coordinates of the exits to be used in a single **simulation set** for the environment load methods that don't use static exits. Environment load methods that don't require an auxiliary file will simply ignore it if provided.
+
+The following syntax must be used when writing the content of an auxiliary file:
+
+1. Commas (`,`) are used to separate different exits in a single **simulation set**.
+2. The addition symbol (`+`) is used to indicate that the next pair of coordinates is part of the same exit (an exit expansion).
+3. A period (`.`) is used to indicate the end of the list of coordinates for a **simulation set**.
+
+#### Example without expansion
+
+```text
+line1 column1, line2 column2, [...], lineN columnN.
+```
+
+#### Example with expansion
+
+```text
+line1_1 column1_1+ line1_2 column1_2, [...].
+```
+
+#### Observations
+
+1. There is no upper limit to the number of different exits or the number of coordinates attached to a single exit. Furthermore, even if the coordinates for a single exit aren't adjacent, the simulation set is still considered valid.
+
+2. Repetitive exits are accepted in a single simulation set and are treated as distinct exits by the program. This can cause inconsistencies, as more than one pedestrian can exit the environment from the same place.
+
+### Output Files
+
+The output files, generated by the program, are placed in the `output` directory. If the -o option is not provided when running the program, the output data will be printed to stdout. If the -o option is provided without specifying a filename, a name is automatically generated for the output file.
+
+## Program's help message
+
+```text
 Usage: alizadeh.exe [OPTION...]
-Alizadeh - Simula uma evacuação de pedestres por meio do modelo de
-(Alizadeh,2011), com pequenas alterações.
+Alizadeh - Simulates pedestrian evacuation using the Alizadeh (2011) model.
 
   
-Arquivos:
+Files:
 
-  -a, --auxiliary-file=ARQUIVO_AUXILIAR
-                             Contém informações auxiliares para a
-                             realização das simulações. Ex: localização
-                             das saídas.
-  -i, --input-file=INPUT-FILE   INPUT-FILE é o nome do arquivo que contém o
-                             ambiente pre-definido a ser carregado.
+  -a, --auxiliary-file=AUXILIARY-FILE
+                             Name of the configuration file that contains the
+                             coordinates of exits for each simulation set.
+  -e, --env-file=ENV-FILE    Name of the file that contains environment
+                             information: dimensions and its mapped features,
+                             including obstacles, walls, and optionally,
+                             pedestrians and doors.
   -o, --output-file[=OUTPUT-FILE]
-                             Indica se a saída deve ser armazenada em um
-                             arquivo, com o nome do arquivo sendo opcionalmente
-                             passado.
+                             Specifies whether the output should be stored in a
+                             file (default is stdout), with the file name being
+                             optionally provided.
   
-Modos de operação:
+Input/Output Configuration:
 
-  -m, --input-method=METHOD  Indica como tratar INPUT_FILE.
-  -O, --output-type=TYPE     Indica o tipo de saída que deve ser gerada pelas
-                             simulações.
+  -m, --env-load-method=METHOD   How the environment will be loaded or whether
+                             it will be created.
+  -O, --output-format=FORMAT The type of output to be generated by the
+                             simulations.
   
-Dimensões do ambiente:
+Environment Dimensions (required for auto created environments):
 
-  -c, --col=COLUNAS          COLUNAS indica a quantidade de colunas que o
-                             ambiente criado deve ter.
-  -l, --lin=LINHAS           LINHAS indica a quantidade de linhas que o
-                             ambiente criado deve ter.
+  -c, --col=COLUMNS          Number of columns for the environment when it is
+                             being created.
+  -l, --lin=LINES            Number of lines for the environment when it is
+                             being created.
   
-Variáveis de simulação:
+Simulation Variables (optional):
 
-      --alfa=ALFA            Coeficiente de evitação de multidões
-  -e, --seed=SEED            Semente inicial para geração de números
-                             pseudo-aleatórios.
-  -p, --ped=PEDESTRES        Número de pedestres a serem inseridos no ambiente
-                             de forma aleatória.
-  -s, --simu=SIMULACOES      Número de simulações a serem realizadas por
-                             conjunto de saídas.
+      --alpha=ALPHA          Coefficient of crowd avoidance (default is 0).
+  -p, --ped=PEDESTRIANS      Number of pedestrians to be randomly placed in the
+                             environment (default is 1).
+      --seed=SEED            Initial seed for the srand function (default is
+                             0).
+  -s, --simu=SIMULATIONS     Number of simulations for each simulation set
+                             (default is 1).
   
-Toggle Options:
+Toggle Options (optional):
 
-      --detalhes             Indica se o output deve conter informações sobre
-                             as saídas.
-  -d, --debug                Indica se mensagens de debug devem ser impressas
-                             na saída padrão.
-      --evitar-mov-cantos    Indica que a movimentação através de cantos de
-                             paredes/obstáculos deve ser impedida.
-      --na-saida             Indica que o pedestre deve permanecer por um passo
-                             de tempo quando chega na saída (invés de ser
-                             retirado imediatamente).
-      --permitir-mov-x       Permite que os pedestres se movimentem em X.
-      --sempre-menor         Indica que a movimentação dos pedestres é
-                             sempre para a menor célula, com o pedestre
-                             ficando parado se ela estiver ocupada.
-      --status               Indica se mensagens de status durante a execução
-                             de simulações devem ser impressas em stdout.
+      --allow-x-movement     The movement of pedestrians isn't restricted when
+                             X movements occur.
+      --always-to-lowest     The pedestrians will always try to move to the
+                             lowest cell in their neighborhood. If it is
+                             occupied, they will wait for it to become empty.
+      --avoid-corner-movement   Prevents movement in the corners of walls and
+                             obstacles. A single diagonal movement through the
+                             corner of a obstacle becomes three movements.
+      --debug                Prints debug information to stdout.
+      --immediate-exit       The pedestrians will exit the environment the
+                             moment they reach an exit, instead of waiting a
+                             timestep in the LEAVING state.
+      --simulation-set-info  Prints simulation set information (exits
+                             coordinates) to the output file.
+      --single-exit-flag     Prints a flag (#1) before the results for every
+                             simulation set that has only one exit.
   
-Outros:
+Additional Information:
 
   -?, --help                 Give this help list
       --usage                Give a short usage message
@@ -141,59 +142,40 @@ Outros:
 Mandatory or optional arguments to long options are also mandatory or optional
 for any corresponding short options.
 
-O arquivo passado por --auxiliary-file deve conter, em cada uma de suas linhas,
-as localizações das saídas para um único conjunto de simulações.
+If no file is provided with --env-file, the varas_queue.txt file will be used.
+The file provided with --auxiliary-file must contain, on each line, the
+coordinates of the exits for a single simulation set. The syntax to be used is
+described in the project's readme.
 
---output-type indica quais e como os dados gerados pela simulação devem ser
-enviados para a saída. As seguintes opções são possíveis:
-         1 - Impressão visual do ambiente.
-         2 - Quantidade de passos de tempo até o fim das simulações.
-         3 - Impressão de mapas de calor das células do ambiente.
-         4 - Variação da distribuição de pedestres para duas saídas, no início
-da simulação.
-A opção 1 é a padrão.
-A opção 4 gera números entre 0 e 1, onde valores próximos à zero indicam
-uam distribuição uniforme entre as duas saídas.Já valores próximos a 1
-indicam uma distribuição de pedestres desigual.
+The --env-load-method option specifies whether the environment will be created
+or loaded from the file provided by --env-file, as well as how it will be
+loaded if applicable. The following choices are available:
+        Environment loaded from a file:
+                1 - Only the environment structure (walls and obstacles).
+                2 - Environment structure and static exits.
+                3 - Environment structure and static pedestrians.
+                4 - (default) Environment structure, static exits and static pedestrians.
+        Environment auto created:
+                5 - Environment structure will be a empty room with dimensions of LINES and
+COLUMNS (including the walls surrounding it).
+Choices 1, 3 and 5 require the file provided by the --auxiliary-file option in
+order to include exits in the simulation.
 
---input-method indica como o ambiente informado em --input-file deve ser
-carregado ou se o ambiente deve ser gerado.
-        Ambiente carregado de um arquivo:
-                1 - Apenas a estrutura do ambiente (portas substituídas por paredes).
-                2 - Estrutura e portas.
-                3 - Estrutura e pedestres.
-                4 - Estrutura, portas e pedestres.
-        Ambiente criado automaticamente:
-                5 - Ambiente será criado considerando quantidade de linhas e colunas
-passadas pelas opções --lin e --col.
-Opções que não carregam portas do arquivo de entrada devem recebê-las via
---auxiliary-file.
-O método 4 é o padrão.
-Para os métodos 1,3 e 5, --auxiliary-file é obrigatório.
-Para o método 5, --lin e --col são obrigatórios.
+The --output-format option specifies which data generated by the simulations
+shall be written to the output stream. The following choices are available:
+         1 - (default) Visual print of the environment.
+         2 - Number of timesteps required for the termination of each simulation.
+         3 - Heatmap of the environment cells.
+         4 - Variation in the pedestrian distribution (at the beginning of the
+simulation) between two doors.
+Choice 4 generates numbers between 0 and 1, where values close to 0 indicate a
+uniform distribution between both doors and values close to 1 indicate a uneven
+distribution.
 
-As variáveis de simulação não são obrigatórias.
---alfa tem valor padrão de 0.
---input-file tem valor padrão de "sala_padrao.txt".
---simu e --ped tem valor padrão de 1.
---seed tem valor padrão de 0.
+The --alpha option indicates the importance of the dynamic weight in
+calculating the floor field value for each cell. Its default value of 0 means
+that the dynamic weight doesn't matter, and the model behaves the same as the
+Varas (2007) model.
 
-Toggle Options são opções que podem ser ativadas e também não são
-obrigatórias.
---na-sala quando ativado obriga os pedestres a ficarem um passo de tempo na
-saída do ambiente antes de serem removidos.
---sempre-menor quando ativado obriga os pedestres a só se moverem para a menor
-célula de sua vizinhança. Se esta estiver ocupada, o pedestre irá esperar
-ela ser desocupada.
---evitar-mov-cantos quando ativado impede que pedestres se movimentem através
-dos cantos de paredes/obstáculos. Um único movimento se torna necessariamente
-em 3 movimentos.
---permitir-mov-x quando ativado permite que os pedestres ignorem a restrição
-que impede movimentações em X.
---debug ativa mensagens de debug.
---status ativa mensagens que indicam o progessão de simulações.
---detalhes inclui um cabeçalho contendo as correspondentes saídas de cada
-conjunto de simulação.
-
-Opções desnecessárias para determinados --input-method são ignoradas.
+Unnecessary options for some --env-load-method are ignored.
 ```

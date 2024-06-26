@@ -16,9 +16,6 @@ output/*
 
 /*.txt
 
-gerador/*
-!gerador/*.c
-!gerador/*/
-!gerador/*/*.*
-
 *.cast
+
+core.*
