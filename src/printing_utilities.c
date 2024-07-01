@@ -175,6 +175,12 @@ void print_execution_status(int set_index, int set_quantity)
 	time_t current_time = time(NULL);
 	struct tm * time_information = localtime(&current_time);
 	
+	if(set_index != 0)
+	{
+		fprintf(stdout, "\033[A\033[2K");
+		fflush(stdout);
+	}
+	
 	strftime(date_time,50,"%F %Z %T",time_information);
 	fprintf(stdout, "Simulation set %5d/%d finalized at %s.\n", set_index + 1, set_quantity, date_time);
 }

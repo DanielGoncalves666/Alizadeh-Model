@@ -107,6 +107,8 @@ Environment Dimensions (required for auto created environments):
 Simulation Variables (optional):
 
       --alpha=ALPHA          Coefficient of crowd avoidance (default is 0).
+      --diagonal=DIAGONAL    The diagonal value for calculation of the static
+                             floor field (default is 1.5).
   -p, --ped=PEDESTRIANS      Number of pedestrians to be randomly placed in the
                              environment (default is 1).
       --seed=SEED            Initial seed for the srand function (default is

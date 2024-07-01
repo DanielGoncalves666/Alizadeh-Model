@@ -27,6 +27,7 @@ typedef struct{
     int total_num_pedestrians;
     int seed;
     double alpha;
+    double diagonal;
 } Command_Line_Args;
 
 error_t parser_function(int key, char *arg, struct argp_state *state);

@@ -139,7 +139,8 @@ int main(int argc, char **argv)
 */
 static Function_Status run_simulations(FILE *output_file)
 {
-    if(cli_args.single_exit_flag == true && cli_args.output_format == OUTPUT_TIMESTEPS_COUNT && exits_set.num_exits == 1)
+    if(cli_args.single_exit_flag == true && exits_set.num_exits == 1 && 
+        (cli_args.output_format == OUTPUT_TIMESTEPS_COUNT || cli_args.output_format == OUTPUT_DISTRIBUTION_VARIATION))
     {
         fprintf(output_file, "#1 "); // simulation set where the exit was combined with itself. Used to correct errors in the plotting program.
     }

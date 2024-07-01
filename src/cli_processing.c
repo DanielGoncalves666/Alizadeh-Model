@@ -42,6 +42,7 @@ const char doc[] = "Alizadeh - Simulates pedestrian evacuation using the Alizade
 "Unnecessary options for some --env-load-method are ignored.\n";
 
 /* Keys for options without short-options. */
+#define OPT_DIAGONAL 1000
 #define OPT_SEED 1001
 #define OPT_DEBUG 1002
 #define OPT_SIMULATION_SET_INFO 1003
@@ -70,6 +71,7 @@ struct argp_option options[] = {
     {"ped", 'p', "PEDESTRIANS", 0, "Number of pedestrians to be randomly placed in the environment (default is 1).",8},
     {"simu", 's', "SIMULATIONS", 0, "Number of simulations for each simulation set (default is 1)."},
     {"seed", OPT_SEED, "SEED", 0, "Initial seed for the srand function (default is 0)."},
+    {"diagonal", OPT_DIAGONAL, "DIAGONAL", 0, "The diagonal value for calculation of the static floor field (default is 1.5)."},
     {"alpha", OPT_ALPHA, "ALPHA", 0, "Coefficient of crowd avoidance (default is 0).", 8},
 
     {"\nToggle Options (optional):\n",0,0,OPTION_DOC,0,9},
@@ -107,7 +109,8 @@ Command_Line_Args cli_args = {
     .num_simulations = 1, // A single simulation by default.
     .total_num_pedestrians = 1,
     .seed = 0,
-    .alpha = 0.0
+    .alpha = 0.0,
+    .diagonal = 1.5
 };
 // When loading an environment global_line_number and global_column_number will no be obtained from the command line arguments. Besides, total_num_pedestrians will be automatic determined by the program on some environment origin formats.
 
@@ -189,6 +192,14 @@ error_t parser_function(int key, char *arg, struct argp_state *state)
             if(cli_args->num_simulations <= 0)
             {
                 fprintf(stderr, "The number of simulations must be positive.\n");
+                return EIO;
+            }
+            break;
+        case OPT_DIAGONAL:
+            cli_args->diagonal = atof(arg);
+            if(cli_args->diagonal < 0)
+            {
+                fprintf(stderr, "The diagonal value must be non-negative.\n");
                 return EIO;
             }
             break;
@@ -298,6 +309,9 @@ void extract_full_command(char *full_command, int key, char *arg)
             break;
         case OPT_SEED:
             sprintf(aux, " --seed=%s", arg);
+            break;
+        case OPT_DIAGONAL:
+            sprintf(aux, " --diagonal=%s", arg);
             break;
         case OPT_ALPHA:
             sprintf(aux, " --alpha=%s",arg);
