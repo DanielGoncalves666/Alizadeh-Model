@@ -28,7 +28,7 @@ bool origin_uses_auxiliary_data()
 /**
  * Verifies if the environment_origin selected uses pedestrians loaded directly from the env-file instead of randomly inserting them.
  * 
- * @return bool, where True indicates that the origin uses static pedestrians is used and False otherwise.
+ * @return bool, where True indicates that the origin uses static pedestrians and False otherwise.
 */
 bool origin_uses_static_pedestrians()
 {
@@ -37,9 +37,9 @@ bool origin_uses_static_pedestrians()
 }
 
 /**
- * Verifies if the environment_origin selected uses exits loaded directly from the env-file instead of inserted them with data from an auxiliary file.
+ * Verifies if the selected environment_origin uses exits loaded directly from the env-file instead of inserting them with data from an auxiliary file.
  * 
- * @return bool, where True indicates that the origin uses static exits is used and False otherwise.
+ * @return bool, where True indicates that the origin uses static exits and False otherwise.
 */
 bool origin_uses_static_exits()
 {

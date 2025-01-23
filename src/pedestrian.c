@@ -245,7 +245,7 @@ Function_Status identify_pedestrian_conflicts(Cell_Conflict *pedestrian_conflict
         }
 
         // The value of *target_cell is less than 0. This indicates that a conflict for the target_cell already exists. 
-        // Futhermore, the corresponding index of the cell_conflict for this cell can be obtained by the following expression.
+        // Furthermore, the corresponding index of the cell_conflict for this cell can be obtained by the following expression.
 
         int conflict_index = (*target_cell * -1) - 1;
         Cell_Conflict current_conflict = &(conflict_list[conflict_index]);

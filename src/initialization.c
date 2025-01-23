@@ -70,11 +70,11 @@ Function_Status open_output_file(FILE **output_file)
         if(strcmp(cli_args.output_filename, "") == 0)
         {
             char *output_type_name;
-            if(cli_args.output_format == 1)
+            if(cli_args.output_format == OUTPUT_VISUALIZATION)
                 output_type_name = "visual";
-            else if(cli_args.output_format == 2)
+            else if(cli_args.output_format == OUTPUT_TIMESTEPS_COUNT)
                 output_type_name = "evacuation_time";
-            else if(cli_args.output_format == 3)
+            else if(cli_args.output_format == OUTPUT_HEATMAP)
                 output_type_name = "heatmap";
             else
                 output_type_name = "distribution_variation";
@@ -378,8 +378,7 @@ static Function_Status symbol_processing(char read_char, Location coordinates)
 
                 pedestrian_position_grid[coordinates.lin][coordinates.col] = pedestrian_set.list[pedestrian_set.num_pedestrians - 1]->id;
             }
-            else
-                environment_only_grid[coordinates.lin][coordinates.col] = 0;
+            environment_only_grid[coordinates.lin][coordinates.col] = 0;
 
             break;
         case '\n':
